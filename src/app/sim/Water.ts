@@ -11,14 +11,14 @@ export class Water extends THREE.Mesh {
         phase: number
     }[] = [];
     
-    constructor(sizeX: number, sizeY: number, color = 0x44ddff, amplitude = 0.5) {
+    constructor(sizeX: number, sizeY: number, color = 0x44ddff, amplitude = 0.2) {
         super();
 
         this.material = new THREE.MeshLambertMaterial({
             color: color
         });    
 
-        this.geometry = new THREE.PlaneGeometry(sizeX, sizeY, Math.round(sizeX/2), Math.round(sizeY/2));
+        this.geometry = new THREE.PlaneGeometry(sizeX, sizeY, sizeX, sizeY);
         this.geometry.rotateX(-Math.PI/2);
 
         // Iterate over each vertex

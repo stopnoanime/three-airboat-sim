@@ -27,9 +27,9 @@ export class SimService {
 
     this.keyboardController = new KeyboardController();
 
-    this.airboat = new Airboat();
+    this.airboat = new Airboat(true);
     this.scene.add(this.airboat);
-
+    
     this.water = new Water(100,100);
     this.scene.add(this.water);
     
