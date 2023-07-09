@@ -1,10 +1,10 @@
 export class KeyboardController {
 
     public keyMap = {
-        w: 'throttleUp',
-        s: 'throttleDown',
-        a: 'yawLeft',
-        d: 'yawRight',
+        KeyW: 'throttleUp',
+        KeyS: 'throttleDown',
+        KeyA: 'yawLeft',
+        KeyD: 'yawRight',
     }
 
     public axisValues: axisValues = {
@@ -20,10 +20,10 @@ export class KeyboardController {
     }
 
     public onKeyEvent(event: KeyboardEvent) {
-        if(!this.keyMap[event.key as keyof typeof this.keyMap]) return
+        if(!this.keyMap[event.code as keyof typeof this.keyMap]) return
         
         // lol
-        this.keyState[this.keyMap[event.key as keyof typeof this.keyMap] as keyof typeof this.keyState] = event.type == 'keydown';
+        this.keyState[this.keyMap[event.code as keyof typeof this.keyMap] as keyof typeof this.keyState] = event.type == 'keydown';
     }
 
     public stepAxisValues() {

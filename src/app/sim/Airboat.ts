@@ -9,12 +9,18 @@ export class Airboat extends THREE.Object3D {
     public force = new THREE.Vector3();
     public turningForce = 0;
 
-    public turningTorqueMultiplier = 0.18;
-    public turningFriction = 1;
+    public velocityTurningTorqueMultiplier = 0.035;
+    public thrustTurningTorqueMultiplier = 0.4;
+    public turningFrictionMultiplier = 0.6;
     public sidewaysDragMultiplier = 1;
     public frontalDragMultiplier = 0.2;
+    public thrustMultiplier = 2;
 
     private debugArrow?: THREE.ArrowHelper;
+
+    public get speed() {
+        return this.velocity.clone().applyQuaternion(this.quaternion.clone().invert()).x;
+    }
 
     constructor(debugArrow = false) {
         super();
@@ -36,11 +42,14 @@ export class Airboat extends THREE.Object3D {
 
     public calculateForces(axisValues: axisValues) {
         // Thrust
-        this.force.add(new THREE.Vector3(axisValues.throttle).applyQuaternion(this.quaternion));
+        this.force.add(new THREE.Vector3(axisValues.throttle * this.thrustMultiplier).applyQuaternion(this.quaternion));
 
-        // Steering
-        const turningTorque = Math.sin(- axisValues.yaw * Math.PI/2) * this.velocity.length() * this.turningTorqueMultiplier; 
-        const turningFriction = this.turningFriction * this.rotationalVelocity;
+        // Steering 
+        const turningTorque = Math.sin(- axisValues.yaw * Math.PI/2) * ( 
+            axisValues.throttle * this.thrustTurningTorqueMultiplier + 
+            this.velocity.length() * this.velocityTurningTorqueMultiplier
+        ); 
+        const turningFriction = this.turningFrictionMultiplier * this.rotationalVelocity;
         this.turningForce = turningTorque - turningFriction;
 
         // Drag

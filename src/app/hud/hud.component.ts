@@ -8,4 +8,5 @@ import { axisValues } from '../sim/KeyboardController';
 })
 export class HudComponent {
   @Input() axisValues!: axisValues;
+  @Input() velocity!: number;
 }

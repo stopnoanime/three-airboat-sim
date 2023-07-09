@@ -1,3 +1,6 @@
 <canvas #canvas></canvas>
 
-<app-hud [axisValues]="sim.keyboardController.axisValues"></app-hud>
+<app-hud 
+    [axisValues]="sim.keyboardController.axisValues" 
+    [velocity]="sim.airboat.speed"
+></app-hud>

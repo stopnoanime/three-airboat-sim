@@ -6,12 +6,18 @@
     width: 20px;
 }
 
-.yaw {
+.bottom {
     position: absolute;
     left: 50%;
     bottom: 0;
     transform: translateX(-50%); 
 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.yaw {
     height: 20px;
 }
 

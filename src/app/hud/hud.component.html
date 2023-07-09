@@ -13,6 +13,9 @@
     <rect [attr.y]="1 - 0.025" height="0.05" width="0.1" fill="black" />
 </svg>
 
-<svg viewBox="0 0 1.02 0.1" class="yaw">
-    <rect [attr.x]="0.5 + axisValues.yaw/2" width="0.02" height="0.1" />
-</svg>
+<div class="bottom">
+    <span>{{velocity | number: '1.2-2'}}</span>
+    <svg viewBox="0 0 1.02 0.1" class="yaw">
+        <rect [attr.x]="0.5 + axisValues.yaw/2" width="0.02" height="0.1" />
+    </svg>
+</div>
