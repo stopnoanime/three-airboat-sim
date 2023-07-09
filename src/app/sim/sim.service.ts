@@ -14,8 +14,9 @@ export class SimService {
   private airboat: Airboat;
   private water: Water;
   private clock: THREE.Clock;
-  private keyboardController: KeyboardController;
   private renderer!: THREE.WebGLRenderer;
+
+  public keyboardController: KeyboardController;
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(75);
@@ -60,10 +61,6 @@ export class SimService {
     this.airboat.removeFromParent();
     this.airboat = new Airboat();
     this.scene.add(this.airboat);
-  }
-
-  public onKeyEvent(event: KeyboardEvent) {
-    this.keyboardController.onKeyEvent(event);
   }
 
   private gameLoop() {

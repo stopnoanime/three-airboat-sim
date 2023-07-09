@@ -26,6 +26,6 @@ export class AppComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   onKey(event: KeyboardEvent) {
     if(event.key == 'r' && event.type == 'keydown') this.sim.reset()
-    else this.sim.onKeyEvent(event);
+    else this.sim.keyboardController.onKeyEvent(event);
   }
 }

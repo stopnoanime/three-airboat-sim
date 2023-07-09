@@ -32,6 +32,9 @@ export class Airboat extends THREE.Object3D {
 
         this.velocity.add(acceleration.multiplyScalar(dt));
 
+        //Limit velocity
+        if(this.velocity.length() > 8) this.velocity.multiplyScalar(8/this.velocity.length())
+
         this.position.add(this.velocity.clone().multiplyScalar(dt).applyQuaternion(this.quaternion));
         
         //Reset forces acting on object

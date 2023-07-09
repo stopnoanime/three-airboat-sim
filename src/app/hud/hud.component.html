@@ -1,0 +1,18 @@
+<svg viewBox="0 0 0.1 1.5" class="throttle">
+    <rect 
+        [attr.height]="axisValues.throttle > 0 ? axisValues.throttle : 0" 
+        [attr.y]="1 - axisValues.throttle"
+        width="0.1" fill="green" 
+    />
+
+    <rect 
+        [attr.height]="axisValues.throttle < 0 ? - axisValues.throttle : 0" 
+        y="1" width="0.1" fill="red" 
+    />
+
+    <rect [attr.y]="1 - 0.025" height="0.05" width="0.1" fill="black" />
+</svg>
+
+<svg viewBox="0 0 1.02 0.1" class="yaw">
+    <rect [attr.x]="0.5 + axisValues.yaw/2" width="0.02" height="0.1" />
+</svg>

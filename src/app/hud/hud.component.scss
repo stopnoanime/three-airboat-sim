@@ -1,0 +1,22 @@
+.throttle {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+
+    width: 20px;
+}
+
+.yaw {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%); 
+
+    height: 20px;
+}
+
+.throttle, .yaw {
+    padding: 4px;
+    margin: 4px;
+    border: 1px solid black;
+}
