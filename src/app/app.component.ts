@@ -22,10 +22,10 @@ export class AppComponent implements OnInit {
     this.sim.onResize();
   }
 
-  // @HostListener('window:keydown', ['$event'])
-  // @HostListener('window:keyup', ['$event'])
-  // onKey(event: KeyboardEvent) {
-  //   if(event.key == 'r' && event.type == 'keydown') this.game.loadRcPlane()
-  //   else this.game.sticksInputController.onKeyEvent(event);
-  // }
+  @HostListener('window:keydown', ['$event'])
+  @HostListener('window:keyup', ['$event'])
+  onKey(event: KeyboardEvent) {
+    if(event.key == 'r' && event.type == 'keydown') this.sim.reset()
+    else this.sim.onKeyEvent(event);
+  }
 }

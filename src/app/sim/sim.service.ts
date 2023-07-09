@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
+import { Airboat } from './Airboat';
+import { Water } from './Water';
+import { KeyboardController } from './KeyboardController';
 
 @Injectable({
   providedIn: 'root'
@@ -8,12 +11,30 @@ export class SimService {
   
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
+  private airboat: Airboat;
+  private water: Water;
+  private clock: THREE.Clock;
+  private keyboardController: KeyboardController;
   private renderer!: THREE.WebGLRenderer;
 
   constructor() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color( 0xD0F0FF );
     this.camera = new THREE.PerspectiveCamera(75);
+
+    this.scene = new THREE.Scene();
+
+    this.clock = new THREE.Clock();
+
+    this.keyboardController = new KeyboardController();
+
+    this.airboat = new Airboat();
+    this.scene.add(this.airboat);
+
+    this.water = new Water(100,100);
+    this.scene.add(this.water);
+    
+    let light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.setScalar(1);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.25), light);
   }
 
   public initialize(canvas: HTMLCanvasElement) {
@@ -22,9 +43,6 @@ export class SimService {
       canvas: canvas
     })
 
-    this.scene.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({color: 0xffff00})));
-    this.camera.position.set(5,5,5);
-    this.camera.lookAt(new THREE.Vector3())
     this.onResize();
 
     this.gameLoop();
@@ -38,7 +56,23 @@ export class SimService {
     this.camera.updateProjectionMatrix();
   }
 
+  public reset() {
+    this.airboat.removeFromParent();
+    this.airboat = new Airboat();
+    this.scene.add(this.airboat);
+  }
+
+  public onKeyEvent(event: KeyboardEvent) {
+    this.keyboardController.onKeyEvent(event);
+  }
+
   private gameLoop() {
+    this.airboat.calculateForces(this.keyboardController.stepAxisValues());
+    this.airboat.integrate();
+    this.airboat.updateCamera(this.camera);
+
+    this.water.update(this.clock.getElapsedTime());
+
     this.renderer.render( this.scene, this.camera );
 
     requestAnimationFrame(() => this.gameLoop());
