@@ -33,9 +33,7 @@ export class SimService {
     this.water = new Water(100,100);
     this.scene.add(this.water);
     
-    let light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.setScalar(1);
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.25), light);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
     this.airboat = new Airboat();
     this.scene.add(this.airboat);
@@ -51,6 +49,12 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
       airboatFolder.add(this.airboat.settings, 'cameraDistance', 0.1, 10)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
+      airboatFolder.addColor(this.airboat.settings, 'mainColor' )
+      .onChange(() => this.airboat.mainMaterial.color.set(this.airboat.settings.mainColor));
+      airboatFolder.addColor(this.airboat.settings, 'accentColor' )
+      .onChange(() => this.airboat.accentMaterial.color.set(this.airboat.settings.accentColor));
+      airboatFolder.addColor(this.airboat.settings, 'lineColor' )
+      .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
       airboatFolder.open()
     }
   }
