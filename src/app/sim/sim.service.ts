@@ -4,6 +4,7 @@ import { Airboat } from './Airboat';
 import { Water } from './Water';
 import { KeyboardController } from './KeyboardController';
 import { GUI } from 'dat.gui'
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -28,9 +29,6 @@ export class SimService {
     this.clock = new THREE.Clock();
 
     this.keyboardController = new KeyboardController();
-
-    this.airboat = new Airboat(true);
-    this.scene.add(this.airboat);
     
     this.water = new Water(100,100);
     this.scene.add(this.water);
@@ -39,15 +37,22 @@ export class SimService {
     light.position.setScalar(1);
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.25), light);
 
-    const gui = new GUI()
-    const airboatFolder = gui.addFolder('Airboat')
-    airboatFolder.add(this.airboat, 'velocityTurningTorqueMultiplier', 0, 0.2, 0.001)
-    airboatFolder.add(this.airboat, 'thrustTurningTorqueMultiplier', 0, 2)
-    airboatFolder.add(this.airboat, 'turningFrictionMultiplier', 0, 2)
-    airboatFolder.add(this.airboat, 'sidewaysDragMultiplier', 0, 5)
-    airboatFolder.add(this.airboat, 'frontalDragMultiplier', 0, 2)
-    airboatFolder.add(this.airboat, 'thrustMultiplier', 1, 10)
-    airboatFolder.open()
+    this.airboat = new Airboat();
+    this.scene.add(this.airboat);
+
+    if(environment.DEBUG) {
+      const gui = new GUI()
+      const airboatFolder = gui.addFolder('Airboat')
+      airboatFolder.add(this.airboat.settings, 'velocityTurningTorque', 0, 0.2, 0.001)
+      airboatFolder.add(this.airboat.settings, 'thrustTurningTorque', 0, 2)
+      airboatFolder.add(this.airboat.settings, 'turningFriction', 0, 2)
+      airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
+      airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
+      airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
+      airboatFolder.add(this.airboat.settings, 'cameraDistance', 0.1, 10)
+      airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
+      airboatFolder.open()
+    }
   }
 
   public initialize(canvas: HTMLCanvasElement) {
@@ -70,16 +75,14 @@ export class SimService {
   }
 
   public reset() {
-    this.airboat.removeFromParent();
-    this.airboat = new Airboat();
-    this.scene.add(this.airboat);
+    this.airboat.reset();
   }
 
   private gameLoop() {
     this.airboat.calculateForces(this.keyboardController.stepAxisValues());
     this.airboat.integrate();
-    this.airboat.updateCamera(this.camera);
-
+    this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
+    
     this.water.update(this.clock.getElapsedTime());
 
     this.renderer.render( this.scene, this.camera );

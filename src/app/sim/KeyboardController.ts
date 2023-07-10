@@ -5,6 +5,10 @@ export class KeyboardController {
         KeyS: 'throttleDown',
         KeyA: 'yawLeft',
         KeyD: 'yawRight',
+        ArrowRight: 'lookRight',
+        ArrowLeft: 'lookLeft',
+        ArrowDown: 'lookBack',
+        ArrowUp: 'lookFront',
     }
 
     public axisValues: axisValues = {
@@ -17,6 +21,10 @@ export class KeyboardController {
         throttleDown: false,
         yawLeft: false,
         yawRight: false,
+        lookRight: false,
+        lookLeft: false,
+        lookBack: false,
+        lookFront: false,
     }
 
     public onKeyEvent(event: KeyboardEvent) {
@@ -34,6 +42,22 @@ export class KeyboardController {
         this.axisValues.yaw = this.minMaxAndRound(this.axisValues.yaw, -1, 1)
 
         return this.axisValues
+    }
+
+    public getCameraDirection(): number {
+        // Couldn't figure out a better way to do it
+        if(this.keyState.lookFront && this.keyState.lookLeft) return -Math.PI/4;
+        if(this.keyState.lookFront && this.keyState.lookRight) return Math.PI/4;
+        if(this.keyState.lookFront) return 0;
+
+        if(this.keyState.lookBack && this.keyState.lookLeft) return -Math.PI*3/4;
+        if(this.keyState.lookBack && this.keyState.lookRight) return Math.PI*3/4;
+        if(this.keyState.lookBack) return Math.PI;
+
+        if(this.keyState.lookLeft) return Math.PI*3/2;
+        if(this.keyState.lookRight) return Math.PI/2;
+        
+        return 0
     }
 
     private stepSingleAxis(keyDown: boolean, keyUp: boolean, value: number) {
