@@ -50,7 +50,8 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
       airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
       airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
-      airboatFolder.add(this.airboat.settings, 'cameraDistance', 0.1, 10)
+      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
+      airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0.1, 1)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
       airboatFolder.addColor(this.airboat.settings, 'mainColor' )
       .onChange(() => this.airboat.mainMaterial.color.set(this.airboat.settings.mainColor));

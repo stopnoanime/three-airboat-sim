@@ -17,7 +17,8 @@ export class Airboat extends THREE.Object3D {
         sidewaysDrag: 1,
         frontalDrag: 0.2,
         thrust: 2,
-        cameraDistance: 1.1,
+        baseCameraDistance: 1,
+        cameraDistanceVelocityScale: 0.25,
         yPosition: 0.04,
         mainColor: 0xef4444,
         accentColor: 0xfb923c,
@@ -107,8 +108,9 @@ export class Airboat extends THREE.Object3D {
     }
 
     public updateCamera(camera: THREE.PerspectiveCamera, angle: number) {
+        const cameraDistance = Math.max(this.settings.baseCameraDistance, this.settings.baseCameraDistance * this.velocity.length() * this.settings.cameraDistanceVelocityScale)
         const cameraOffset = 
-            new THREE.Vector3(- this.settings.cameraDistance, this.settings.cameraDistance * 0.5, 0)
+            new THREE.Vector3(- cameraDistance, cameraDistance * 0.5, 0)
             .applyAxisAngle(new THREE.Vector3(0,1,0), angle);
 
         camera.position.copy(cameraOffset.applyQuaternion(this.quaternion).add(this.position));
