@@ -66,7 +66,7 @@ export class Airboat extends THREE.Object3D {
         const propMountGeometry = new THREE.ExtrudeGeometry( propMountShape, {
             bevelEnabled: false,
             depth: 0.002
-        }).translate(0,0.001,0.11);
+        }).translate(0,0.001,0.11 - 0.001);
 
         const propellerGeometry =  new THREE.ExtrudeGeometry( propShape, {
             bevelEnabled: false,

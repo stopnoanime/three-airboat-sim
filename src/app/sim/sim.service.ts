@@ -1,37 +1,39 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import { Airboat } from './Airboat';
-import { Water } from './Water';
 import { KeyboardController } from './KeyboardController';
 import { GUI } from 'dat.gui'
 import { environment } from 'src/environments/environment';
+import { Scenery } from './Scenery';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SimService {
-  
-  private scene: THREE.Scene;
-  private camera: THREE.PerspectiveCamera;
-  private water: Water;
-  private clock: THREE.Clock;
-  private renderer!: THREE.WebGLRenderer;
+
+  public sceneBackground = 0xdefffb;
 
   public airboat: Airboat;
   public keyboardController: KeyboardController;
+
+  private scene: THREE.Scene;
+  private camera: THREE.PerspectiveCamera;
+  private scenery: Scenery;
+  private clock: THREE.Clock;
+  private renderer!: THREE.WebGLRenderer;
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(75);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color( 0xD0F0FF );
+    this.scene.background = new THREE.Color( this.sceneBackground );
     
     this.clock = new THREE.Clock();
 
     this.keyboardController = new KeyboardController();
     
-    this.water = new Water(100,100);
-    this.scene.add(this.water);
+    this.scenery = new Scenery();
+    this.scene.add(this.scenery);
     
     this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
@@ -39,7 +41,8 @@ export class SimService {
     this.scene.add(this.airboat);
 
     if(environment.DEBUG) {
-      const gui = new GUI()
+      const gui = new GUI();
+
       const airboatFolder = gui.addFolder('Airboat')
       airboatFolder.add(this.airboat.settings, 'velocityTurningTorque', 0, 0.2, 0.001)
       airboatFolder.add(this.airboat.settings, 'thrustTurningTorque', 0, 2)
@@ -56,6 +59,16 @@ export class SimService {
       airboatFolder.addColor(this.airboat.settings, 'lineColor' )
       .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
       airboatFolder.open()
+
+      const envFolder = gui.addFolder('Environment');
+      envFolder.addColor(this.scenery.water, 'color')
+      .onChange(() => this.scenery.water.material.color.set(this.scenery.water.color));
+
+      envFolder.addColor(this.scenery, 'sandColor')
+      .onChange(() => this.scenery.material.color.set(this.scenery.sandColor));
+
+      envFolder.addColor(this, 'sceneBackground')
+      .onChange(() => (this.scene.background as THREE.Color).set(this.sceneBackground));
     }
   }
 
@@ -86,8 +99,6 @@ export class SimService {
     this.airboat.calculateForces(this.keyboardController.stepAxisValues());
     this.airboat.integrate();
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
-    
-    this.water.update(this.clock.getElapsedTime());
 
     this.renderer.render( this.scene, this.camera );
 
