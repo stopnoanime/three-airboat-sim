@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
+import * as PLANCK from 'planck';
 import { Airboat } from './Airboat';
 import { KeyboardController } from './KeyboardController';
 import { GUI } from 'dat.gui'
@@ -21,6 +22,7 @@ export class SimService {
   private scenery: Scenery;
   private clock: THREE.Clock;
   private renderer!: THREE.WebGLRenderer;
+  private world: PLANCK.World;
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(75);
@@ -28,16 +30,20 @@ export class SimService {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( this.sceneBackground );
     
+    this.world = new PLANCK.World({
+      gravity: new PLANCK.Vec2(0,0),
+    });
+
     this.clock = new THREE.Clock();
 
     this.keyboardController = new KeyboardController();
     
-    this.scenery = new Scenery();
+    this.scenery = new Scenery(this.world);
     this.scene.add(this.scenery);
     
     this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-    this.airboat = new Airboat();
+    this.airboat = new Airboat(this.world);
     this.scene.add(this.airboat);
 
     if(environment.DEBUG) {
@@ -50,7 +56,7 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
       airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
       airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
-      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
+      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 100)
       airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0.1, 1)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
       airboatFolder.addColor(this.airboat.settings, 'mainColor' )
@@ -98,9 +104,11 @@ export class SimService {
 
   private gameLoop() {
     this.airboat.calculateForces(this.keyboardController.stepAxisValues());
-    this.airboat.integrate();
-    this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
 
+    this.world.step(1/144);
+
+    this.airboat.syncBodyAndMesh();
+    this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
     this.renderer.render( this.scene, this.camera );
 
     requestAnimationFrame(() => this.gameLoop());

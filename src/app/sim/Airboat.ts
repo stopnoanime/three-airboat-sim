@@ -1,22 +1,19 @@
 import * as THREE from 'three';
+import * as PLANCK from 'planck';
 import { axisValues } from './KeyboardController';
 import { environment } from 'src/environments/environment';
 
 export class Airboat extends THREE.Object3D {
 
-    public velocity = new THREE.Vector3();
-    public rotationalVelocity = 0;
-
-    public force = new THREE.Vector3();
-    public turningForce = 0;
+    public body: PLANCK.Body;
 
     public settings = {
-        velocityTurningTorque: 0.035,
-        thrustTurningTorque: 0.4,
+        velocityTurningTorque: 0.05,
+        thrustTurningTorque: 0.9,
         turningFriction: 0.6,
-        sidewaysDrag: 1,
+        sidewaysDrag: 2,
         frontalDrag: 0.2,
-        thrust: 2,
+        thrust: 2.5,
         baseCameraDistance: 1,
         cameraDistanceVelocityScale: 0.25,
         yPosition: 0.04,
@@ -36,10 +33,11 @@ export class Airboat extends THREE.Object3D {
     private debugArrow?: THREE.ArrowHelper;
 
     public get speed() {
-        return this.velocity.clone().applyQuaternion(this.quaternion.clone().invert()).x;
+        return this.body.getLinearVelocity().length();
     }
 
-    constructor() {
+    constructor(world: PLANCK.World) {
+        //THREE
         super();
 
         const hullShape = new THREE.Shape();
@@ -100,15 +98,31 @@ export class Airboat extends THREE.Object3D {
 
         this.add(this.hull, this.propeller, this.rudder);
 
+        //PLANCK
+        this.body = world.createBody({
+            type: 'dynamic',
+        });
+
+        this.body.createFixture({
+            shape: new PLANCK.Box(0.2,0.11),
+            friction: 0,
+        })
+
+        this.body.setMassData({
+            center: PLANCK.Vec2(0,0),
+            I: 1,
+            mass: 1
+        })
+
         if(environment.DEBUG) {
             this.debugArrow = new THREE.ArrowHelper()
-            this.debugArrow.position.setY(0.25)
+            this.debugArrow.position.setY(0.1)
             this.add(this.debugArrow)
         }
     }
 
     public updateCamera(camera: THREE.PerspectiveCamera, angle: number) {
-        const cameraDistance = Math.max(this.settings.baseCameraDistance, this.settings.baseCameraDistance * this.velocity.length() * this.settings.cameraDistanceVelocityScale)
+        const cameraDistance = Math.max(this.settings.baseCameraDistance, this.settings.baseCameraDistance * this.body.getLinearVelocity().length() * this.settings.cameraDistanceVelocityScale)
         const cameraOffset = 
             new THREE.Vector3(- cameraDistance, cameraDistance * 0.5, 0)
             .applyAxisAngle(new THREE.Vector3(0,1,0), angle);
@@ -121,47 +135,42 @@ export class Airboat extends THREE.Object3D {
         this.updateControlSurfaces(axisValues);
 
         // Thrust
-        this.force.add(new THREE.Vector3(axisValues.throttle * this.settings.thrust).applyQuaternion(this.quaternion));
-
+        this.body.applyForceToCenter(this.body.getWorldVector(PLANCK.Vec2(axisValues.throttle * this.settings.thrust,0)));
+        
         // Steering 
         const turningTorque = Math.sin(- axisValues.yaw * Math.PI/2) * ( 
             axisValues.throttle * this.settings.thrustTurningTorque + 
-            this.velocity.length() * this.settings.velocityTurningTorque
+            this.body.getLinearVelocity().length() * this.settings.velocityTurningTorque
         ); 
-        const turningFriction = this.settings.turningFriction * this.rotationalVelocity;
-        this.turningForce = turningTorque - turningFriction;
+        const turningFriction = this.settings.turningFriction * this.body.getAngularVelocity();
+        this.body.applyTorque(turningTorque - turningFriction);
 
         // Drag
-        const localDrag = this.velocity.clone().negate().applyQuaternion(this.quaternion.clone().invert())
+        const localDrag = this.body.getLocalVector(this.body.getLinearVelocity().clone().neg());
         localDrag.x *= this.settings.frontalDrag;
-        localDrag.z *= this.settings.sidewaysDrag;
-        this.force.add(localDrag.applyQuaternion(this.quaternion))
+        localDrag.y *= this.settings.sidewaysDrag;
+        this.body.applyForceToCenter(this.body.getWorldVector(localDrag))
     }
 
-    public integrate(dt = 1/60) {
-        // Angular calculation
-        this.rotationalVelocity += this.turningForce * dt;
-        this.rotateY(this.rotationalVelocity * dt);
+    public syncBodyAndMesh() {
+        const pos = this.body.getPosition();
+        //Planck and Three Y/Z axis is flipped 
+        this.position.set(pos.x, this.settings.yPosition, -pos.y);
+        this.rotation.set(0, this.body.getAngle(), 0);
 
-        // Linear calculation
-        this.velocity.add(this.force.clone().multiplyScalar(dt));
-        this.position.add(this.velocity.clone().multiplyScalar(dt));
-        
-        //Reset forces acting on object
-        this.force.set(0,0,0);
-        this.turningForce = 0;
-
-        if(this.debugArrow) 
-            this.debugArrow.setDirection(this.velocity.clone().applyQuaternion(this.quaternion.clone().invert()).normalize())
+        if(this.debugArrow) {
+            const vel = this.body.getLocalVector(this.body.getLinearVelocity().clone())
+            vel.normalize();
+            this.debugArrow.setDirection(new THREE.Vector3(vel.x, 0, -vel.y));
+            this.debugArrow.setLength(this.body.getLinearVelocity().length()/4)
+        }
     }
 
     public reset() {
-        this.force.set(0,0,0);
-        this.turningForce = 0;
-        this.velocity.set(0,0,0);
-        this.rotationalVelocity = 0;
-        this.position.set(0,this.settings.yPosition,0);
-        this.rotation.set(0,0,0);
+        this.body.setPosition(PLANCK.Vec2());
+        this.body.setAngle(0);
+        this.body.setLinearVelocity(PLANCK.Vec2())
+        this.body.setAngularVelocity(0);
     }
 
     private updateControlSurfaces(axisValues: axisValues) {

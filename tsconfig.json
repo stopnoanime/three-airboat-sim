@@ -21,6 +21,7 @@
     "useDefineForClassFields": false,
     "lib": [
       "ES2022",
+      "DOM.Iterable",
       "dom"
     ]
   },
