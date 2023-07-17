@@ -12,6 +12,8 @@ export class Water extends THREE.Mesh {
 
         this.material = new THREE.MeshLambertMaterial({
             color: this.color
-        });    
+        });
+
+        this.receiveShadow = true;
     }
 }

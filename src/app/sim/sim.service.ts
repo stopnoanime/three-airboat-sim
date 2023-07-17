@@ -20,12 +20,13 @@ export class SimService {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private scenery: Scenery;
-  private clock: THREE.Clock;
+  private dirLight: THREE.DirectionalLight;
   private renderer!: THREE.WebGLRenderer;
   private world: PLANCK.World;
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(75);
+    this.camera.far = 100;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( this.sceneBackground );
@@ -34,17 +35,27 @@ export class SimService {
       gravity: new PLANCK.Vec2(0,0),
     });
 
-    this.clock = new THREE.Clock();
-
-    this.keyboardController = new KeyboardController();
-    
     this.scenery = new Scenery(this.world);
     this.scene.add(this.scenery);
     
-    this.scene.add(new THREE.AmbientLight(0xffffff, 1));
-
     this.airboat = new Airboat(this.world);
     this.scene.add(this.airboat);
+
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+    this.dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    this.dirLight.target = this.airboat;
+    this.dirLight.castShadow = true;
+    this.dirLight.shadow.camera.left = -0.5
+    this.dirLight.shadow.camera.right = 0.5
+    this.dirLight.shadow.camera.top = 0.5
+    this.dirLight.shadow.camera.bottom = -0.5
+    this.dirLight.shadow.camera.far = 2;
+    this.dirLight.shadow.mapSize.width = 1024;
+    this.dirLight.shadow.mapSize.height = 1024;
+    this.scene.add(this.dirLight);
+
+    this.keyboardController = new KeyboardController();
 
     if(environment.DEBUG) {
       const gui = new GUI();
@@ -56,7 +67,7 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
       airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
       airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
-      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 100)
+      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
       airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0.1, 1)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
       airboatFolder.addColor(this.airboat.settings, 'mainColor' )
@@ -76,6 +87,8 @@ export class SimService {
 
       envFolder.addColor(this, 'sceneBackground')
       .onChange(() => (this.scene.background as THREE.Color).set(this.sceneBackground));
+
+      this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
     }
   }
 
@@ -84,6 +97,8 @@ export class SimService {
       antialias: true,
       canvas: canvas
     })
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.onResize();
 
@@ -109,6 +124,8 @@ export class SimService {
 
     this.airboat.syncBodyAndMesh();
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
+    this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,1,1)));
+
     this.renderer.render( this.scene, this.camera );
 
     requestAnimationFrame(() => this.gameLoop());

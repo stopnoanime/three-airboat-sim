@@ -29,6 +29,8 @@ export class Airboat extends THREE.Object3D {
     private hull: THREE.Mesh;
     private propeller: THREE.Mesh;
     private rudder: THREE.Mesh;
+    private engine: THREE.Mesh;
+    private propMount: THREE.Mesh;
 
     private debugArrow?: THREE.ArrowHelper;
 
@@ -40,6 +42,7 @@ export class Airboat extends THREE.Object3D {
         //THREE
         super();
 
+        //shapes
         const hullShape = new THREE.Shape();
         hullShape.moveTo( 0,0 );
         hullShape.lineTo( 0, -0.05 );
@@ -49,7 +52,7 @@ export class Airboat extends THREE.Object3D {
 
         const propMountShape = new THREE.Shape();
         propMountShape.moveTo(0,0);
-        propMountShape.lineTo(0.06,0);
+        propMountShape.lineTo(0.05,0);
         propMountShape.lineTo(0.02,0.14);
         propMountShape.lineTo(0,0.14);
         propMountShape.lineTo( 0, 0 );
@@ -57,6 +60,7 @@ export class Airboat extends THREE.Object3D {
         const propShape = new THREE.Shape();
         propShape.ellipse(0,0, 0.08, 0.005,0, Math.PI*2, false, 0);
 
+        //geometries
         const hullGeometry = new THREE.ExtrudeGeometry( hullShape, {
             bevelEnabled: false,
             depth: 0.22
@@ -65,38 +69,54 @@ export class Airboat extends THREE.Object3D {
         const propMountGeometry = new THREE.ExtrudeGeometry( propMountShape, {
             bevelEnabled: false,
             depth: 0.002
-        }).translate(0,0.001,0.11 - 0.001);
+        }).translate(0, 0.001, -0.001);
 
         const propellerGeometry =  new THREE.ExtrudeGeometry( propShape, {
             bevelEnabled: false,
             depth: 0.002
         }).rotateY(-Math.PI/2);
 
-        const engineGeometry = new THREE.CylinderGeometry(0.01,0.01,0.04).rotateZ(Math.PI/2).translate(0.045,0.1,0.11);
-        const rudderGeometry = new THREE.BoxGeometry(0.14,0.04,0.002).translate(0,-0.02,0).rotateZ(-Math.PI/2);
+        const engineGeometry = new THREE.CylinderGeometry(0.01,0.01,0.03).rotateZ(Math.PI/2);
+        const rudderGeometry = new THREE.BoxGeometry(0.04,0.14,0.002).translate(-0.02,0,0);
 
+        //materials
         this.mainMaterial = new THREE.MeshLambertMaterial({color: this.settings.mainColor});
         this.accentMaterial = new THREE.MeshLambertMaterial({color: this.settings.accentColor});
         this.lineMaterial = new THREE.LineBasicMaterial({color: this.settings.lineColor});
 
+        //meshes
         this.hull = new THREE.Mesh(hullGeometry, this.mainMaterial);
-        this.hull.add( new THREE.Mesh(propMountGeometry, this.mainMaterial))
-        this.hull.add( new THREE.Mesh(engineGeometry, new THREE.MeshLambertMaterial({color: this.settings.lineColor})))
-        this.hull.add( new THREE.LineSegments(new THREE.EdgesGeometry(hullGeometry), this.lineMaterial));
-        this.hull.add( new THREE.LineSegments(new THREE.EdgesGeometry(propMountGeometry), this.lineMaterial));
-
         this.rudder = new THREE.Mesh(rudderGeometry, this.accentMaterial)
-        this.rudder.add( new THREE.LineSegments(new THREE.EdgesGeometry(rudderGeometry), this.lineMaterial));
-
         this.propeller = new THREE.Mesh(propellerGeometry, this.accentMaterial)
+        this.propMount = new THREE.Mesh(propMountGeometry, this.mainMaterial);
+        this.engine = new THREE.Mesh(engineGeometry, new THREE.MeshLambertMaterial({color: this.settings.lineColor}))
 
+        //mesh edges
+        this.hull.add( new THREE.LineSegments(new THREE.EdgesGeometry(hullGeometry), this.lineMaterial));
+        this.rudder.add( new THREE.LineSegments(new THREE.EdgesGeometry(rudderGeometry), this.lineMaterial));
+        this.propMount.add( new THREE.LineSegments(new THREE.EdgesGeometry(propMountGeometry), this.lineMaterial));
+
+        //shadows
+        this.hull.castShadow = true;
+        this.hull.receiveShadow = true;
+        this.rudder.castShadow = true;
+        this.rudder.receiveShadow = true;
+        this.propeller.castShadow = true;
+        this.propeller.receiveShadow = true;
+        this.engine.castShadow = true;
+        this.engine.receiveShadow = true;
+        this.propMount.castShadow = true;
+        this.propMount.receiveShadow = true;
+
+        //assemble airboat
         this.hull.position.set(-0.2,0,-0.11)
         this.rudder.position.set(-0.2,0.07,0);
-        this.propeller.position.set(-0.132,0.1,0);
+        this.propeller.position.set(-0.146,0.1,0);
+        this.engine.position.set(-0.165,0.1,0);
+        this.propMount.position.set(-0.2,0,0);
 
+        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount);
         this.position.setY(this.settings.yPosition);
-
-        this.add(this.hull, this.propeller, this.rudder);
 
         //PLANCK
         this.body = world.createBody({
@@ -154,6 +174,7 @@ export class Airboat extends THREE.Object3D {
 
     public syncBodyAndMesh() {
         const pos = this.body.getPosition();
+        
         //Planck and Three Y/Z axis is flipped 
         this.position.set(pos.x, this.settings.yPosition, -pos.y);
         this.rotation.set(0, this.body.getAngle(), 0);
