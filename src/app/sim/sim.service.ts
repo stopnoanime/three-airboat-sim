@@ -61,6 +61,7 @@ export class SimService {
       const gui = new GUI();
 
       const airboatFolder = gui.addFolder('Airboat')
+
       airboatFolder.add(this.airboat.settings, 'velocityTurningTorque', 0, 0.2, 0.001)
       airboatFolder.add(this.airboat.settings, 'thrustTurningTorque', 0, 2)
       airboatFolder.add(this.airboat.settings, 'turningFriction', 0, 2)
@@ -70,6 +71,7 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
       airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0.1, 1)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
+
       airboatFolder.addColor(this.airboat.settings, 'mainColor' )
       .onChange(() => this.airboat.mainMaterial.color.set(this.airboat.settings.mainColor));
       airboatFolder.addColor(this.airboat.settings, 'accentColor' )
@@ -79,14 +81,15 @@ export class SimService {
       airboatFolder.open()
 
       const envFolder = gui.addFolder('Environment');
-      envFolder.addColor(this.scenery.water, 'color')
-      .onChange(() => this.scenery.water.material.color.set(this.scenery.water.color));
-
-      envFolder.addColor(this.scenery, 'sandColor')
-      .onChange(() => this.scenery.material.color.set(this.scenery.sandColor));
 
       envFolder.addColor(this, 'sceneBackground')
       .onChange(() => (this.scene.background as THREE.Color).set(this.sceneBackground));
+      envFolder.addColor(this.scenery.water, 'color')
+      .onChange(() => this.scenery.water.material.color.set(this.scenery.water.color));
+      envFolder.addColor(this.scenery, 'sandColor')
+      .onChange(() => this.scenery.terrainUniforms.sandColor.value.set(this.scenery.sandColor));
+      envFolder.addColor(this.scenery, 'grassColor')
+      .onChange(() => this.scenery.terrainUniforms.grassColor.value.set(this.scenery.grassColor));
 
       this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
     }
