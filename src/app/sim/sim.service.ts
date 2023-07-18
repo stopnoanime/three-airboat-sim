@@ -26,7 +26,6 @@ export class SimService {
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(75);
-    this.camera.far = 100;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( this.sceneBackground );
@@ -68,7 +67,7 @@ export class SimService {
       airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
       airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
       airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
-      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
+      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 100)
       airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0.1, 1)
       airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.1)
 
