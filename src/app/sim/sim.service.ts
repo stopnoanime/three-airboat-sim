@@ -28,15 +28,15 @@ export class SimService {
     this.camera = new THREE.PerspectiveCamera(75);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color( this.sceneBackground );
     
     this.world = new PLANCK.World({
       gravity: new PLANCK.Vec2(0,0),
     });
 
     this.scenery = new Scenery(this.world);
+    this.scene.background = this.scenery.skyBox;
     this.scene.add(this.scenery);
-    
+
     this.airboat = new Airboat(this.world);
     this.scene.add(this.airboat);
 

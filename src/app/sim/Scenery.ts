@@ -10,12 +10,14 @@ export class Scenery extends THREE.Mesh {
     public grassColor = 0x009A17;
 
     public water: Water;
+    public skyBox: THREE.CubeTexture;
     public override geometry: THREE.PlaneGeometry;
 
     private body: PLANCK.Body;
     private meshLoader = new GLTFLoader();
+    private skyBoxLoader = new THREE.CubeTextureLoader();
     private heightMap = new THREE.TextureLoader().load(environment.heightMapUrl, texture => this.applyHeightMap(texture));
-
+    
     public terrainUniforms = {
         heightMap: { value: this.heightMap },
         heightMapScale: { value: 1 },
@@ -34,6 +36,12 @@ export class Scenery extends THREE.Mesh {
         })
 
         this.geometry = new THREE.PlaneGeometry(mapSize, mapSize, mapSize * 10, mapSize * 10).rotateX(-Math.PI/2);
+
+        this.skyBox = this.skyBoxLoader.setPath( 'assets/skybox/' ).load([
+            'right.bmp', 'left.bmp',
+            'top.bmp', 'bottom.bmp',
+            'front.bmp', 'back.bmp'
+        ]);;
 
         // Water
         this.water = new Water(mapSize);
