@@ -83,12 +83,16 @@ export class SimService {
 
       envFolder.addColor(this, 'sceneBackground')
       .onChange(() => (this.scene.background as THREE.Color).set(this.sceneBackground));
-      envFolder.addColor(this.scenery.water, 'color')
-      .onChange(() => this.scenery.water.material.color.set(this.scenery.water.color));
+      
       envFolder.addColor(this.scenery, 'sandColor')
       .onChange(() => this.scenery.terrainUniforms.sandColor.value.set(this.scenery.sandColor));
       envFolder.addColor(this.scenery, 'grassColor')
       .onChange(() => this.scenery.terrainUniforms.grassColor.value.set(this.scenery.grassColor));
+
+      envFolder.addColor(this.scenery.water, 'waterColorDeep')
+      .onChange(() => this.scenery.water.material.uniforms['waterColorDeep'].value.set(this.scenery.water.waterColorDeep));
+      envFolder.addColor(this.scenery.water, 'waterColorShallow')
+      .onChange(() => this.scenery.water.material.uniforms['waterColorShallow'].value.set(this.scenery.water.waterColorShallow));
 
       this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
     }

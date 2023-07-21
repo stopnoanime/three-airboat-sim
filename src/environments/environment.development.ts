@@ -1,5 +1,6 @@
 export const environment = {
     DEBUG: true,
     mapSvgUrl: 'assets/map.svg',
-    heightMapUrl: 'assets/heightMap.png',
+    terrainHeightMapUrl: 'assets/terrain.png',
+    waterHeightMapUrl: 'assets/water.png',
 };

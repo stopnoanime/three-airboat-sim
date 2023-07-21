@@ -16,11 +16,10 @@ export class Scenery extends THREE.Mesh {
     private body: PLANCK.Body;
     private meshLoader = new GLTFLoader();
     private skyBoxLoader = new THREE.CubeTextureLoader();
-    private heightMap = new THREE.TextureLoader().load(environment.heightMapUrl, texture => this.applyHeightMap(texture));
+    private terrainHeightMap = new THREE.TextureLoader().load(environment.terrainHeightMapUrl, texture => this.applyHeightMap(texture));
     
     public terrainUniforms = {
-        heightMap: { value: this.heightMap },
-        heightMapScale: { value: 1 },
+        heightMap: { value: this.terrainHeightMap },
         sandColor: { value: new THREE.Color(this.sandColor) },
         grassColor: { value: new THREE.Color(this.grassColor) },
     }
@@ -85,7 +84,7 @@ export class Scenery extends THREE.Mesh {
         for (let h = 0; h < geoS; h++) {
             for (let w = 0; w < geoS; w++) {
                 const imageIdx = Math.round(h * imgToGeoRatio) * imgS + Math.round(w * imgToGeoRatio);
-                verticesData.setY(h * geoS + w, imageData[imageIdx * 4]/255 - 0.15);
+                verticesData.setY(h * geoS + w, imageData[imageIdx * 4]/255 - 0.05);
             }
         }
 
@@ -134,7 +133,6 @@ export class Scenery extends THREE.Mesh {
 
 const terrainVertexShader = `
     uniform sampler2D heightMap;
-    uniform float heightMapScale;
 
     varying float vertexHeight;
 
