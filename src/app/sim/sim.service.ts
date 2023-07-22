@@ -18,6 +18,7 @@ export class SimService {
   public keyboardController: KeyboardController;
 
   private scene: THREE.Scene;
+  private clock: THREE.Clock;
   private camera: THREE.PerspectiveCamera;
   private scenery: Scenery;
   private dirLight: THREE.DirectionalLight;
@@ -29,6 +30,8 @@ export class SimService {
 
     this.scene = new THREE.Scene();
     
+    this.clock = new THREE.Clock()
+
     this.world = new PLANCK.World({
       gravity: new PLANCK.Vec2(0,0),
     });
@@ -79,20 +82,25 @@ export class SimService {
       .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
       airboatFolder.open()
 
-      const envFolder = gui.addFolder('Environment');
-
-      envFolder.addColor(this, 'sceneBackground')
-      .onChange(() => (this.scene.background as THREE.Color).set(this.sceneBackground));
-      
-      envFolder.addColor(this.scenery, 'sandColor')
+      const sceneryFolder = gui.addFolder('Scenery');
+      sceneryFolder.addColor(this.scenery, 'sandColor')
       .onChange(() => this.scenery.terrainUniforms.sandColor.value.set(this.scenery.sandColor));
-      envFolder.addColor(this.scenery, 'grassColor')
+      sceneryFolder.addColor(this.scenery, 'grassColor')
       .onChange(() => this.scenery.terrainUniforms.grassColor.value.set(this.scenery.grassColor));
 
-      envFolder.addColor(this.scenery.water, 'waterColorDeep')
+      const waterFolder = gui.addFolder('Water');
+      waterFolder.addColor(this.scenery.water, 'waterColorDeep')
       .onChange(() => this.scenery.water.material.uniforms['waterColorDeep'].value.set(this.scenery.water.waterColorDeep));
-      envFolder.addColor(this.scenery.water, 'waterColorShallow')
+      waterFolder.addColor(this.scenery.water, 'waterColorShallow')
       .onChange(() => this.scenery.water.material.uniforms['waterColorShallow'].value.set(this.scenery.water.waterColorShallow));
+      waterFolder.add(this.scenery.water, 'surfaceNoiseCutoff', 0, 1)
+      .onChange(() => this.scenery.water.material.uniforms['surfaceNoiseCutoff'].value = this.scenery.water.surfaceNoiseCutoff);
+      waterFolder.add(this.scenery.water, 'edgeFoamCutoff', 0, 1)
+      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoff'].value = this.scenery.water.edgeFoamCutoff);
+      waterFolder.add(this.scenery.water, 'distortionMapSpeed', 0, 0.1, 0.001)
+      .onChange(() => this.scenery.water.material.uniforms['distortionMapSpeed'].value = this.scenery.water.distortionMapSpeed);
+      waterFolder.add(this.scenery.water, 'distortionMapStrength', 0, 0.1, 0.001)
+      .onChange(() => this.scenery.water.material.uniforms['distortionMapStrength'].value = this.scenery.water.distortionMapStrength);
 
       this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
     }
@@ -131,7 +139,8 @@ export class SimService {
     this.airboat.syncBodyAndMesh();
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
     this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,1,1)));
-
+    this.scenery.water.updateTime(this.clock.getElapsedTime());
+    
     this.renderer.render( this.scene, this.camera );
 
     requestAnimationFrame(() => this.gameLoop());

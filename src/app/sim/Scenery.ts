@@ -16,7 +16,8 @@ export class Scenery extends THREE.Mesh {
     private body: PLANCK.Body;
     private meshLoader = new GLTFLoader();
     private skyBoxLoader = new THREE.CubeTextureLoader();
-    private terrainHeightMap = new THREE.TextureLoader().load(environment.terrainHeightMapUrl, texture => this.applyHeightMap(texture));
+    private textureLoader = new THREE.TextureLoader();
+    private terrainHeightMap = this.textureLoader.load(environment.terrainHeightMapUrl, texture => this.applyHeightMap(texture));
     
     public terrainUniforms = {
         heightMap: { value: this.terrainHeightMap },
