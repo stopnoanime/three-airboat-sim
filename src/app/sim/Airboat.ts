@@ -20,17 +20,21 @@ export class Airboat extends THREE.Object3D {
         mainColor: 0xef4444,
         accentColor: 0xfb923c,
         lineColor: 0x404040,
+        wakeLength: 0.5,
     }
 
     public mainMaterial: THREE.MeshLambertMaterial;
     public accentMaterial: THREE.MeshLambertMaterial;
     public lineMaterial: THREE.LineBasicMaterial;
+    public wakeMaterial: THREE.ShaderMaterial;
 
     private hull: THREE.Mesh;
     private propeller: THREE.Mesh;
     private rudder: THREE.Mesh;
     private engine: THREE.Mesh;
     private propMount: THREE.Mesh;
+
+    private wake: THREE.Mesh;
 
     private debugArrow?: THREE.ArrowHelper;
 
@@ -78,11 +82,24 @@ export class Airboat extends THREE.Object3D {
 
         const engineGeometry = new THREE.CylinderGeometry(0.01,0.01,0.03).rotateZ(Math.PI/2);
         const rudderGeometry = new THREE.BoxGeometry(0.04,0.14,0.002).translate(-0.02,0,0);
+        const wakeGeometry = new THREE.PlaneGeometry(this.settings.wakeLength,0.14).rotateX(-Math.PI/2)
 
         //materials
         this.mainMaterial = new THREE.MeshLambertMaterial({color: this.settings.mainColor});
         this.accentMaterial = new THREE.MeshLambertMaterial({color: this.settings.accentColor});
         this.lineMaterial = new THREE.LineBasicMaterial({color: this.settings.lineColor});
+        this.wakeMaterial = new THREE.ShaderMaterial({
+            uniforms: THREE.UniformsUtils.merge([
+                { time: { value: 0 }, throttle: { value: 0 } },
+                THREE.UniformsLib.lights,
+            ]),
+            vertexShader: wakeVertexShader,
+            fragmentShader: wakeFragmentShader,
+            lights: true,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            transparent: true
+        })
 
         //meshes
         this.hull = new THREE.Mesh(hullGeometry, this.mainMaterial);
@@ -90,6 +107,7 @@ export class Airboat extends THREE.Object3D {
         this.propeller = new THREE.Mesh(propellerGeometry, this.accentMaterial)
         this.propMount = new THREE.Mesh(propMountGeometry, this.mainMaterial);
         this.engine = new THREE.Mesh(engineGeometry, new THREE.MeshLambertMaterial({color: this.settings.lineColor}))
+        this.wake = new THREE.Mesh(wakeGeometry, this.wakeMaterial)
 
         //mesh edges
         this.hull.add( new THREE.LineSegments(new THREE.EdgesGeometry(hullGeometry), this.lineMaterial));
@@ -107,6 +125,7 @@ export class Airboat extends THREE.Object3D {
         this.engine.receiveShadow = true;
         this.propMount.castShadow = true;
         this.propMount.receiveShadow = true;
+        this.wake.receiveShadow = true;
 
         //assemble airboat
         this.hull.position.set(-0.2,0,-0.11)
@@ -114,10 +133,11 @@ export class Airboat extends THREE.Object3D {
         this.propeller.position.set(-0.146,0.1,0);
         this.engine.position.set(-0.165,0.1,0);
         this.propMount.position.set(-0.2,0,0);
-
-        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount);
+        this.wake.position.set(-0.2 - this.settings.wakeLength/2, -this.settings.yPosition,0);
+        
+        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount, this.wake);
         this.position.setY(this.settings.yPosition);
-
+        
         //PLANCK
         this.body = world.createBody({
             type: 'dynamic',
@@ -194,8 +214,53 @@ export class Airboat extends THREE.Object3D {
         this.body.setAngularVelocity(0);
     }
 
+    public updateTime(t: number) {
+        this.wakeMaterial.uniforms['time'].value = t;
+    }
+
     private updateControlSurfaces(axisValues: axisValues) {
         this.propeller.rotateX(axisValues.throttle);
-        this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0)
+        this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0);
+        this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
     }
 }
+
+const wakeVertexShader = `
+    #include <common>
+    #include <shadowmap_pars_vertex>
+    
+    varying vec2 vUv;
+
+    void main() {
+        #include <begin_vertex>
+        #include <beginnormal_vertex>
+        #include <project_vertex>
+        #include <worldpos_vertex>
+        #include <defaultnormal_vertex> 
+        #include <shadowmap_vertex>
+
+        vUv = uv;
+    }
+`
+
+const wakeFragmentShader = `
+    #include <common>
+    #include <packing>
+    #include <lights_pars_begin>
+    #include <shadowmap_pars_fragment>
+    #include <shadowmask_pars_fragment>
+    #include <noise_3d>
+
+    uniform float time;
+    uniform float throttle;
+
+    varying vec2 vUv;
+
+    void main() {
+        float noise = 0.5 + snoise(vec3(vUv.x*6.0, vUv.y*2.0, time*3.0))/2.0;
+        float chance = sin(vUv.y * 3.1415) * sin(vUv.x * 3.1415);
+        bool transparent = noise > chance;
+
+        gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : throttle);
+    }
+`

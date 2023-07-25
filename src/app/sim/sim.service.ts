@@ -6,6 +6,7 @@ import { KeyboardController } from './KeyboardController';
 import { GUI } from 'dat.gui'
 import { environment } from 'src/environments/environment';
 import { Scenery } from './Scenery';
+import noise_3d from './noise_3d';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,8 @@ export class SimService {
   private world: PLANCK.World;
 
   constructor() {
+    (THREE.ShaderChunk as any).noise_3d = noise_3d;
+    
     this.camera = new THREE.PerspectiveCamera(75);
 
     this.scene = new THREE.Scene();
@@ -137,7 +140,9 @@ export class SimService {
     this.world.step(1/144);
 
     this.airboat.syncBodyAndMesh();
+    this.airboat.updateTime(this.clock.getElapsedTime());
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
+
     this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,1,1)));
     this.scenery.water.updateTime(this.clock.getElapsedTime());
     

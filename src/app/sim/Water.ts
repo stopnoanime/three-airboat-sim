@@ -37,8 +37,8 @@ export class Water extends THREE.Mesh {
                 this.waterUniforms,
                 THREE.UniformsLib.lights,
             ]),
-            vertexShader: terrainVertexShader,
-            fragmentShader: terrainFragmentShader,
+            vertexShader: waterVertexShader,
+            fragmentShader: waterFragmentShader,
             lights: true,
         })
 
@@ -52,7 +52,7 @@ export class Water extends THREE.Mesh {
 
 //Info on how to make shader material with shadows taken from here: https://gist.github.com/wmcmurray/6696fc95f25bbd2401d72a74e9493261
 
-const terrainVertexShader = `
+const waterVertexShader = `
     #include <common>
     #include <shadowmap_pars_vertex>
 
@@ -88,7 +88,7 @@ const terrainVertexShader = `
     }
 `
 
-const terrainFragmentShader = `
+const waterFragmentShader = `
     #include <common>
     #include <packing>
     #include <lights_pars_begin>
@@ -103,14 +103,14 @@ const terrainFragmentShader = `
     varying float vertexHeight;
     varying float noise;
 
-    void main() {   
+    void main() {
         vec3 deep = (1.0 - smoothstep(0.0, 0.3, vertexHeight)) * waterColorDeep;
         vec3 shallow = smoothstep(0.0, 0.3, vertexHeight) * waterColorShallow;
 
         float edgeFoamModifier = clamp( (1.0 - vertexHeight) / edgeFoamCutoff, 0.0, 1.0);
-        float surfaceNoise = noise > surfaceNoiseCutoff * edgeFoamModifier ? 1.0 : 0.0;
-
-        vec3 finalColor = deep + shallow + surfaceNoise;
+        bool surfaceNoise = noise > surfaceNoiseCutoff * edgeFoamModifier;
+        
+        vec3 finalColor = surfaceNoise ? vec3(1,1,1) : deep + shallow;
 
         // mix final color and shadows
         gl_FragColor = vec4( mix(finalColor, vec3(0, 0, 0), (1.0 - getShadowMask() ) * 0.5), 1.0);
