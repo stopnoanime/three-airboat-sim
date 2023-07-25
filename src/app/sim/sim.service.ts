@@ -100,10 +100,10 @@ export class SimService {
       .onChange(() => this.scenery.water.material.uniforms['surfaceNoiseCutoff'].value = this.scenery.water.surfaceNoiseCutoff);
       waterFolder.add(this.scenery.water, 'edgeFoamCutoff', 0, 1)
       .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoff'].value = this.scenery.water.edgeFoamCutoff);
-      waterFolder.add(this.scenery.water, 'distortionMapSpeed', 0, 0.1, 0.001)
-      .onChange(() => this.scenery.water.material.uniforms['distortionMapSpeed'].value = this.scenery.water.distortionMapSpeed);
-      waterFolder.add(this.scenery.water, 'distortionMapStrength', 0, 0.1, 0.001)
-      .onChange(() => this.scenery.water.material.uniforms['distortionMapStrength'].value = this.scenery.water.distortionMapStrength);
+      waterFolder.add(this.scenery.water, 'noiseSpeed', 0, 0.1)
+      .onChange(() => this.scenery.water.material.uniforms['noiseSpeed'].value = this.scenery.water.noiseSpeed);
+      waterFolder.add(this.scenery.water, 'noiseSize', 1, 200)
+      .onChange(() => this.scenery.water.material.uniforms['noiseSize'].value = this.scenery.water.noiseSize);
 
       this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
     }

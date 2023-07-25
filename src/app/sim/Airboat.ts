@@ -164,7 +164,7 @@ export class Airboat extends THREE.Object3D {
     public updateCamera(camera: THREE.PerspectiveCamera, angle: number) {
         const cameraDistance = Math.max(this.settings.baseCameraDistance, this.settings.baseCameraDistance * this.body.getLinearVelocity().length() * this.settings.cameraDistanceVelocityScale)
         const cameraOffset = 
-            new THREE.Vector3(- cameraDistance, cameraDistance * 0.5, 0)
+            new THREE.Vector3(- cameraDistance, cameraDistance * 0.6, 0)
             .applyAxisAngle(new THREE.Vector3(0,1,0), angle);
 
         camera.position.copy(cameraOffset.applyQuaternion(this.quaternion).add(this.position));
