@@ -83,6 +83,8 @@ export class SimService {
       .onChange(() => this.airboat.accentMaterial.color.set(this.airboat.settings.accentColor));
       airboatFolder.addColor(this.airboat.settings, 'lineColor' )
       .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
+      airboatFolder.addColor(this.airboat.settings, 'foamColor' )
+      .onChange(() => this.airboat.foamMaterial.uniforms['color'].value.set(this.airboat.settings.foamColor));
       airboatFolder.open()
 
       const sceneryFolder = gui.addFolder('Scenery');

@@ -15,26 +15,28 @@ export class Airboat extends THREE.Object3D {
         frontalDrag: 0.2,
         thrust: 2.5,
         baseCameraDistance: 1,
-        cameraDistanceVelocityScale: 0.25,
+        cameraDistanceVelocityScale: 0.2,
         yPosition: 0.04,
         mainColor: 0xef4444,
         accentColor: 0xfb923c,
         lineColor: 0x404040,
         wakeLength: 0.5,
+        foamColor: 0xe2fdff,
     }
 
     public mainMaterial: THREE.MeshLambertMaterial;
     public accentMaterial: THREE.MeshLambertMaterial;
     public lineMaterial: THREE.LineBasicMaterial;
     public wakeMaterial: THREE.ShaderMaterial;
+    public foamMaterial: THREE.ShaderMaterial;
 
     private hull: THREE.Mesh;
     private propeller: THREE.Mesh;
     private rudder: THREE.Mesh;
     private engine: THREE.Mesh;
     private propMount: THREE.Mesh;
-
     private wake: THREE.Mesh;
+    private foam: THREE.Points;
 
     private debugArrow?: THREE.ArrowHelper;
 
@@ -82,12 +84,21 @@ export class Airboat extends THREE.Object3D {
 
         const engineGeometry = new THREE.CylinderGeometry(0.01,0.01,0.03).rotateZ(Math.PI/2);
         const rudderGeometry = new THREE.BoxGeometry(0.04,0.14,0.002).translate(-0.02,0,0);
-        const wakeGeometry = new THREE.PlaneGeometry(this.settings.wakeLength,0.14).rotateX(-Math.PI/2)
+        const wakeGeometry = new THREE.PlaneGeometry(this.settings.wakeLength,0.12).rotateX(-Math.PI/2)
 
         //materials
         this.mainMaterial = new THREE.MeshLambertMaterial({color: this.settings.mainColor});
         this.accentMaterial = new THREE.MeshLambertMaterial({color: this.settings.accentColor});
         this.lineMaterial = new THREE.LineBasicMaterial({color: this.settings.lineColor});
+        this.foamMaterial = new THREE.ShaderMaterial({
+            uniforms: { 
+                time: {value: 0}, vel: {value: 0}, velAngle: {value: 0},
+                color: {value: new THREE.Color(this.settings.foamColor)}
+            },
+            vertexShader: foamVertexShader,
+            fragmentShader: foamFragmentShader,
+            transparent: true
+        });
         this.wakeMaterial = new THREE.ShaderMaterial({
             uniforms: THREE.UniformsUtils.merge([
                 { time: { value: 0 }, throttle: { value: 0 } },
@@ -100,7 +111,7 @@ export class Airboat extends THREE.Object3D {
             polygonOffsetFactor: -1,
             transparent: true
         })
-
+        
         //meshes
         this.hull = new THREE.Mesh(hullGeometry, this.mainMaterial);
         this.rudder = new THREE.Mesh(rudderGeometry, this.accentMaterial)
@@ -108,6 +119,7 @@ export class Airboat extends THREE.Object3D {
         this.propMount = new THREE.Mesh(propMountGeometry, this.mainMaterial);
         this.engine = new THREE.Mesh(engineGeometry, new THREE.MeshLambertMaterial({color: this.settings.lineColor}))
         this.wake = new THREE.Mesh(wakeGeometry, this.wakeMaterial)
+        this.foam = new THREE.Points(this.generateFoamGeometry(), this.foamMaterial );
 
         //mesh edges
         this.hull.add( new THREE.LineSegments(new THREE.EdgesGeometry(hullGeometry), this.lineMaterial));
@@ -134,8 +146,9 @@ export class Airboat extends THREE.Object3D {
         this.engine.position.set(-0.165,0.1,0);
         this.propMount.position.set(-0.2,0,0);
         this.wake.position.set(-0.2 - this.settings.wakeLength/2, -this.settings.yPosition,0);
-        
-        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount, this.wake);
+        this.foam.position.set(-0.2, -this.settings.yPosition, 0);
+
+        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount, this.wake, this.foam);
         this.position.setY(this.settings.yPosition);
         
         //PLANCK
@@ -199,6 +212,10 @@ export class Airboat extends THREE.Object3D {
         this.position.set(pos.x, this.settings.yPosition, -pos.y);
         this.rotation.set(0, this.body.getAngle(), 0);
 
+        const vel = this.body.getLocalVector(this.body.getLinearVelocity());
+        this.foamMaterial.uniforms['vel'].value = vel.length();
+        this.foamMaterial.uniforms['velAngle'].value = Math.atan2(vel.y, vel.x)
+
         if(this.debugArrow) {
             const vel = this.body.getLocalVector(this.body.getLinearVelocity().clone())
             vel.normalize();
@@ -216,12 +233,41 @@ export class Airboat extends THREE.Object3D {
 
     public updateTime(t: number) {
         this.wakeMaterial.uniforms['time'].value = t;
+        this.foamMaterial.uniforms['time'].value = t;
     }
 
     private updateControlSurfaces(axisValues: axisValues) {
         this.propeller.rotateX(axisValues.throttle);
         this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0);
         this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
+    }
+
+    private generateFoamGeometry() {
+        const foamPosition = [];
+        const foamJumpHeight = [];
+        const foamJumpLength = [];
+        const foamJumpSpeed = [];
+        const foamJumpStop = [];
+        const foamJumpAngleMod = [];
+
+        for ( let i = 0; i < 200; i ++ ) {
+            foamPosition.push( 0, 0, THREE.MathUtils.randFloatSpread( 0.22 ));
+            foamJumpHeight.push(THREE.MathUtils.randFloat(0.2, 1));
+            foamJumpLength.push(THREE.MathUtils.randFloat(0.2, 1));
+            foamJumpSpeed.push(THREE.MathUtils.randFloat(0.8, 1));
+            foamJumpStop.push(THREE.MathUtils.randFloat(0.5, 1));
+            foamJumpAngleMod.push(THREE.MathUtils.randFloatSpread( 0.8 ));
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( foamPosition, 3 ) );
+        geometry.setAttribute( 'jumpHeight', new THREE.Float32BufferAttribute( foamJumpHeight, 1 ) );
+        geometry.setAttribute( 'jumpLength', new THREE.Float32BufferAttribute( foamJumpLength, 1 ) );
+        geometry.setAttribute( 'jumpSpeed', new THREE.Float32BufferAttribute( foamJumpSpeed, 1 ) );
+        geometry.setAttribute( 'jumpStop', new THREE.Float32BufferAttribute( foamJumpStop, 1 ) );
+        geometry.setAttribute( 'jumpAngleMod', new THREE.Float32BufferAttribute( foamJumpAngleMod, 1 ) );
+
+        return geometry
     }
 }
 
@@ -262,5 +308,52 @@ const wakeFragmentShader = `
         bool transparent = noise > chance;
 
         gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : throttle);
+    }
+`
+
+const foamVertexShader = `
+    uniform float time;
+    uniform float vel;
+    uniform float velAngle;
+
+    attribute float jumpHeight;
+    attribute float jumpLength;
+    attribute float jumpSpeed;
+    attribute float jumpStop;
+    attribute float jumpAngleMod;
+
+    varying float jumpProgress;
+    varying float jumpEnd;
+
+    void main() {
+        float x = mod(time * jumpSpeed, jumpLength);
+
+        jumpProgress = x / jumpLength;
+        jumpEnd = jumpStop;
+
+        float y = - jumpHeight * x * (x - jumpLength);
+
+        float angle = velAngle + jumpAngleMod;
+        float realX = cos(angle) * -x;
+        float realZ = sin(angle) * x;
+
+        vec3 offset = vec3(realX, y, realZ) * vel / 10.0;
+
+        gl_PointSize = 2.0;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position + offset, 1);
+    }
+`
+
+const foamFragmentShader = `
+    uniform vec3 color;
+
+    varying float jumpProgress;
+    varying float jumpEnd;
+
+    void main() {
+        if(jumpProgress >= jumpEnd) discard; 
+
+        float opacity = (1.0 - smoothstep(jumpEnd - 0.2, jumpEnd, jumpProgress));
+        gl_FragColor = vec4(color, opacity);
     }
 `
