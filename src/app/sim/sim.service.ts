@@ -85,7 +85,6 @@ export class SimService {
       .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
       airboatFolder.addColor(this.airboat.settings, 'foamColor' )
       .onChange(() => this.airboat.foamMaterial.uniforms['color'].value.set(this.airboat.settings.foamColor));
-      airboatFolder.open()
 
       const sceneryFolder = gui.addFolder('Scenery');
       sceneryFolder.addColor(this.scenery, 'sandColor')
@@ -98,11 +97,13 @@ export class SimService {
       .onChange(() => this.scenery.water.material.uniforms['waterColorDeep'].value.set(this.scenery.water.waterColorDeep));
       waterFolder.addColor(this.scenery.water, 'waterColorShallow')
       .onChange(() => this.scenery.water.material.uniforms['waterColorShallow'].value.set(this.scenery.water.waterColorShallow));
-      waterFolder.add(this.scenery.water, 'surfaceNoiseCutoff', 0, 1)
+      waterFolder.add(this.scenery.water, 'surfaceNoiseCutoff', 0, 0.2)
       .onChange(() => this.scenery.water.material.uniforms['surfaceNoiseCutoff'].value = this.scenery.water.surfaceNoiseCutoff);
-      waterFolder.add(this.scenery.water, 'edgeFoamCutoff', 0, 1)
-      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoff'].value = this.scenery.water.edgeFoamCutoff);
-      waterFolder.add(this.scenery.water, 'noiseSpeed', 0, 0.1)
+      waterFolder.add(this.scenery.water, 'edgeFoamCutoffMin', 0, 1)
+      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoffMin'].value = this.scenery.water.edgeFoamCutoffMin);
+      waterFolder.add(this.scenery.water, 'edgeFoamCutoffMax', 0, 1)
+      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoffMax'].value = this.scenery.water.edgeFoamCutoffMax);
+      waterFolder.add(this.scenery.water, 'noiseSpeed', 0, 0.2)
       .onChange(() => this.scenery.water.material.uniforms['noiseSpeed'].value = this.scenery.water.noiseSpeed);
       waterFolder.add(this.scenery.water, 'noiseSize', 1, 200)
       .onChange(() => this.scenery.water.material.uniforms['noiseSize'].value = this.scenery.water.noiseSize);
