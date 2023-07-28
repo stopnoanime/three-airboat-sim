@@ -22,6 +22,10 @@ export class Airboat extends THREE.Object3D {
         lineColor: 0x404040,
         wakeLength: 0.5,
         foamColor: 0xe2fdff,
+        swayMultiplierX: 0.015,
+        swayMaxX: 0.05,
+        swayMultiplierZ: 0.015,
+        swayMaxZ: 0.04,
     }
 
     public mainMaterial: THREE.MeshLambertMaterial;
@@ -141,14 +145,15 @@ export class Airboat extends THREE.Object3D {
 
         //assemble airboat
         this.hull.position.set(-0.2,0,-0.11)
-        this.rudder.position.set(-0.2,0.07,0);
-        this.propeller.position.set(-0.146,0.1,0);
-        this.engine.position.set(-0.165,0.1,0);
-        this.propMount.position.set(-0.2,0,0);
+        this.rudder.position.set(0,0.07,0.11);
+        this.propeller.position.set(0.054,0.1,0.11);
+        this.engine.position.set(0.035,0.1,0.11);
+        this.propMount.position.set(0,0,0.11);
         this.wake.position.set(-0.2 - this.settings.wakeLength/2, -this.settings.yPosition,0);
         this.foam.position.set(-0.2, -this.settings.yPosition, 0);
 
-        this.add(this.hull, this.propeller, this.rudder, this.engine, this.propMount, this.wake, this.foam);
+        this.hull.add(this.propeller, this.rudder, this.engine, this.propMount)
+        this.add(this.hull, this.wake, this.foam);
         this.position.setY(this.settings.yPosition);
         
         //PLANCK
@@ -185,10 +190,10 @@ export class Airboat extends THREE.Object3D {
     }
 
     public calculateForces(axisValues: axisValues) {
-        this.updateControlSurfaces(axisValues);
+        const force = new PLANCK.Vec2();
 
         // Thrust
-        this.body.applyForceToCenter(this.body.getWorldVector(PLANCK.Vec2(axisValues.throttle * this.settings.thrust,0)));
+        force.add(PLANCK.Vec2(axisValues.throttle * this.settings.thrust,0));
         
         // Steering 
         const turningTorque = Math.sin(- axisValues.yaw * Math.PI/2) * ( 
@@ -202,7 +207,12 @@ export class Airboat extends THREE.Object3D {
         const localDrag = this.body.getLocalVector(this.body.getLinearVelocity().clone().neg());
         localDrag.x *= this.settings.frontalDrag;
         localDrag.y *= this.settings.sidewaysDrag;
-        this.body.applyForceToCenter(this.body.getWorldVector(localDrag))
+        force.add(localDrag);
+
+        // Apply the calculated force
+        this.body.applyForceToCenter(this.body.getWorldVector(force));
+        this.applySway(force);
+        this.updateControlSurfaces(axisValues);
     }
 
     public syncBodyAndMesh() {
@@ -212,6 +222,7 @@ export class Airboat extends THREE.Object3D {
         this.position.set(pos.x, this.settings.yPosition, -pos.y);
         this.rotation.set(0, this.body.getAngle(), 0);
 
+        //Pass data to shaders
         const vel = this.body.getLocalVector(this.body.getLinearVelocity());
         this.foamMaterial.uniforms['vel'].value = vel.length();
         this.foamMaterial.uniforms['velAngle'].value = Math.atan2(vel.y, vel.x)
@@ -240,6 +251,11 @@ export class Airboat extends THREE.Object3D {
         this.propeller.rotateX(axisValues.throttle);
         this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0);
         this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
+    }
+
+    private applySway(force: PLANCK.Vec2) {
+        this.hull.rotation.x = - THREE.MathUtils.clamp(force.y * this.settings.swayMultiplierX, -this.settings.swayMaxX, this.settings.swayMaxX);
+        this.hull.rotation.z = THREE.MathUtils.clamp(force.x * this.settings.swayMultiplierZ, -this.settings.swayMaxZ, this.settings.swayMaxZ);
     }
 
     private generateFoamGeometry() {
