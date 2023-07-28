@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { environment } from 'src/environments/environment';
 
 export class Water extends THREE.Mesh {
     
@@ -11,30 +10,26 @@ export class Water extends THREE.Mesh {
     public noiseSpeed = 0.1;
     public noiseSize = 50;
 
-    private textureLoader = new THREE.TextureLoader();
-
-    public waterUniforms = {
-        time: { value: 0 },
-        heightMap: { value: this.textureLoader.load(environment.waterHeightMapUrl) },
-        noiseSpeed: { value: this.noiseSpeed },
-        noiseSize: { value: this.noiseSize },
-        surfaceNoiseCutoff: { value: this.surfaceNoiseCutoff },
-        edgeFoamCutoffMin: { value: this.edgeFoamCutoffMin },
-        edgeFoamCutoffMax: { value: this.edgeFoamCutoffMax },
-        waterColorDeep: { value: new THREE.Color(this.waterColorDeep) },
-        waterColorShallow: { value: new THREE.Color(this.waterColorShallow) },
-    }
-
     override material: THREE.ShaderMaterial;
 
-    constructor(size: number) {
+    constructor(heightMap: THREE.Texture, size = 100) {
         super();
 
         this.geometry = new THREE.PlaneGeometry(size, size, size, size).rotateX(-Math.PI/2);
 
-        this.material =  new THREE.ShaderMaterial({
+        this.material = new THREE.ShaderMaterial({
             uniforms: THREE.UniformsUtils.merge([
-                this.waterUniforms,
+                {
+                    time: { value: 0 },
+                    heightMap: { value: heightMap },
+                    noiseSpeed: { value: this.noiseSpeed },
+                    noiseSize: { value: this.noiseSize },
+                    surfaceNoiseCutoff: { value: this.surfaceNoiseCutoff },
+                    edgeFoamCutoffMin: { value: this.edgeFoamCutoffMin },
+                    edgeFoamCutoffMax: { value: this.edgeFoamCutoffMax },
+                    waterColorDeep: { value: new THREE.Color(this.waterColorDeep) },
+                    waterColorShallow: { value: new THREE.Color(this.waterColorShallow) },
+                },
                 THREE.UniformsLib.lights,
             ]),
             vertexShader: waterVertexShader,

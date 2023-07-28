@@ -7,49 +7,42 @@ import { GUI } from 'dat.gui'
 import { environment } from 'src/environments/environment';
 import { Scenery } from './Scenery';
 import noise_3d from './noise_3d';
+import { Water } from './Water';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SimService {
 
-  public sceneBackground = 0xdefffb;
+  public loaded = false;
 
   public airboat: Airboat;
   public keyboardController: KeyboardController;
+  
+  private water!: Water;
+  private scenery!: Scenery;
+  private renderer!: THREE.WebGLRenderer;
 
   private scene: THREE.Scene;
   private clock: THREE.Clock;
   private camera: THREE.PerspectiveCamera;
-  private scenery: Scenery;
   private dirLight: THREE.DirectionalLight;
-  private renderer!: THREE.WebGLRenderer;
   private world: PLANCK.World;
 
   constructor() {
     (THREE.ShaderChunk as any).noise_3d = noise_3d;
-    
-    this.camera = new THREE.PerspectiveCamera(75);
 
+    this.camera = new THREE.PerspectiveCamera(75);
     this.scene = new THREE.Scene();
-    
-    this.clock = new THREE.Clock()
+    this.clock = new THREE.Clock();
 
     this.world = new PLANCK.World({
       gravity: new PLANCK.Vec2(0,0),
     });
 
-    this.scenery = new Scenery(this.world);
-    this.scene.background = this.scenery.skyBox;
-    this.scene.add(this.scenery);
-
-    this.airboat = new Airboat(this.world);
-    this.scene.add(this.airboat);
-
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
     this.dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    this.dirLight.target = this.airboat;
     this.dirLight.castShadow = true;
     this.dirLight.shadow.camera.left = -0.5
     this.dirLight.shadow.camera.right = 0.5
@@ -60,63 +53,16 @@ export class SimService {
     this.dirLight.shadow.mapSize.height = 1024;
     this.scene.add(this.dirLight);
 
+    this.airboat = new Airboat(this.world);
+    this.dirLight.target = this.airboat;
+    this.scene.add(this.airboat);
+
     this.keyboardController = new KeyboardController();
-
-    if(environment.DEBUG) {
-      const gui = new GUI();
-
-      const airboatFolder = gui.addFolder('Airboat')
-
-      airboatFolder.add(this.airboat.settings, 'velocityTurningTorque', 0, 0.2, 0.001)
-      airboatFolder.add(this.airboat.settings, 'thrustTurningTorque', 0, 2)
-      airboatFolder.add(this.airboat.settings, 'turningFriction', 0, 2)
-      airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
-      airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
-      airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
-      airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
-      airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0, 1)
-      airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.2)
-      airboatFolder.add(this.airboat.settings, 'swayMaxX', 0, 0.2)
-      airboatFolder.add(this.airboat.settings, 'swayMultiplierX', 0, 0.02)
-      airboatFolder.add(this.airboat.settings, 'swayMaxZ', 0, 0.2)
-      airboatFolder.add(this.airboat.settings, 'swayMultiplierZ', 0, 0.02)
-
-      airboatFolder.addColor(this.airboat.settings, 'mainColor' )
-      .onChange(() => this.airboat.mainMaterial.color.set(this.airboat.settings.mainColor));
-      airboatFolder.addColor(this.airboat.settings, 'accentColor' )
-      .onChange(() => this.airboat.accentMaterial.color.set(this.airboat.settings.accentColor));
-      airboatFolder.addColor(this.airboat.settings, 'lineColor' )
-      .onChange(() => this.airboat.lineMaterial.color.set(this.airboat.settings.lineColor));
-      airboatFolder.addColor(this.airboat.settings, 'foamColor' )
-      .onChange(() => this.airboat.foamMaterial.uniforms['color'].value.set(this.airboat.settings.foamColor));
-
-      const sceneryFolder = gui.addFolder('Scenery');
-      sceneryFolder.addColor(this.scenery, 'sandColor')
-      .onChange(() => this.scenery.terrainUniforms.sandColor.value.set(this.scenery.sandColor));
-      sceneryFolder.addColor(this.scenery, 'grassColor')
-      .onChange(() => this.scenery.terrainUniforms.grassColor.value.set(this.scenery.grassColor));
-
-      const waterFolder = gui.addFolder('Water');
-      waterFolder.addColor(this.scenery.water, 'waterColorDeep')
-      .onChange(() => this.scenery.water.material.uniforms['waterColorDeep'].value.set(this.scenery.water.waterColorDeep));
-      waterFolder.addColor(this.scenery.water, 'waterColorShallow')
-      .onChange(() => this.scenery.water.material.uniforms['waterColorShallow'].value.set(this.scenery.water.waterColorShallow));
-      waterFolder.add(this.scenery.water, 'surfaceNoiseCutoff', 0, 0.2)
-      .onChange(() => this.scenery.water.material.uniforms['surfaceNoiseCutoff'].value = this.scenery.water.surfaceNoiseCutoff);
-      waterFolder.add(this.scenery.water, 'edgeFoamCutoffMin', 0, 1)
-      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoffMin'].value = this.scenery.water.edgeFoamCutoffMin);
-      waterFolder.add(this.scenery.water, 'edgeFoamCutoffMax', 0, 1)
-      .onChange(() => this.scenery.water.material.uniforms['edgeFoamCutoffMax'].value = this.scenery.water.edgeFoamCutoffMax);
-      waterFolder.add(this.scenery.water, 'noiseSpeed', 0, 0.2)
-      .onChange(() => this.scenery.water.material.uniforms['noiseSpeed'].value = this.scenery.water.noiseSpeed);
-      waterFolder.add(this.scenery.water, 'noiseSize', 1, 200)
-      .onChange(() => this.scenery.water.material.uniforms['noiseSize'].value = this.scenery.water.noiseSize);
-
-      this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
-    }
   }
 
-  public initialize(canvas: HTMLCanvasElement) {
+  public async initialize(canvas: HTMLCanvasElement) {
+    if(this.loaded) return;
+    
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: canvas
@@ -124,12 +70,38 @@ export class SimService {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    this.onResize();
+    const textureLoader = new THREE.TextureLoader();
+    const cubeTextureLoader = new THREE.CubeTextureLoader().setPath('assets/skybox/');
 
+    const terrainHeightMap = textureLoader.loadAsync(environment.terrainHeightMapUrl);
+    const waterHeightMap = textureLoader.loadAsync(environment.waterHeightMapUrl);
+    const mapSvg = fetch(environment.mapSvgUrl).then(r => r.text()).then(t => new DOMParser().parseFromString(t, "text/html"));
+    const skyBox = cubeTextureLoader.loadAsync([
+      'right.bmp', 'left.bmp',
+      'top.bmp', 'bottom.bmp',
+      'front.bmp', 'back.bmp'
+    ]);
+
+    this.water = new Water(await waterHeightMap);
+    this.scene.add(this.water);
+
+    this.scenery = new Scenery(this.world, await mapSvg, await terrainHeightMap);
+    await this.scenery.loadMeshes(await mapSvg, await terrainHeightMap);
+    this.scene.add(this.scenery);
+
+    this.scene.background = await skyBox;
+
+    if(environment.DEBUG) this.initDebugGui();
+
+    this.loaded = true;
+
+    this.onResize();
     this.gameLoop();
   }
 
   public onResize() {
+    if(!this.loaded) return;
+
     const rect = this.renderer.domElement.getBoundingClientRect();
 
     this.renderer.setSize(rect.width, rect.height, false);
@@ -151,10 +123,63 @@ export class SimService {
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
 
     this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,1,1)));
-    this.scenery.water.updateTime(this.clock.getElapsedTime());
+    this.water.updateTime(this.clock.getElapsedTime());
     
     this.renderer.render( this.scene, this.camera );
 
     requestAnimationFrame(() => this.gameLoop());
+  }
+
+  private initDebugGui() {
+    const gui = new GUI();
+
+    const airboatFolder = gui.addFolder('Airboat')
+
+    airboatFolder.add(this.airboat.settings, 'velocityTurningTorque', 0, 0.2, 0.001)
+    airboatFolder.add(this.airboat.settings, 'thrustTurningTorque', 0, 2)
+    airboatFolder.add(this.airboat.settings, 'turningFriction', 0, 2)
+    airboatFolder.add(this.airboat.settings, 'sidewaysDrag', 0, 5)
+    airboatFolder.add(this.airboat.settings, 'frontalDrag', 0, 2)
+    airboatFolder.add(this.airboat.settings, 'thrust', 1, 10)
+    airboatFolder.add(this.airboat.settings, 'baseCameraDistance', 0.1, 10)
+    airboatFolder.add(this.airboat.settings, 'cameraDistanceVelocityScale', 0, 1)
+    airboatFolder.add(this.airboat.settings, 'yPosition', 0, 0.2)
+    airboatFolder.add(this.airboat.settings, 'swayMaxX', 0, 0.2)
+    airboatFolder.add(this.airboat.settings, 'swayMultiplierX', 0, 0.02)
+    airboatFolder.add(this.airboat.settings, 'swayMaxZ', 0, 0.2)
+    airboatFolder.add(this.airboat.settings, 'swayMultiplierZ', 0, 0.02)
+
+    airboatFolder.addColor(this.airboat.settings, 'mainColor' )
+    .onChange((v) => this.airboat.mainMaterial.color.set(v));
+    airboatFolder.addColor(this.airboat.settings, 'accentColor' )
+    .onChange((v) => this.airboat.accentMaterial.color.set(v));
+    airboatFolder.addColor(this.airboat.settings, 'lineColor' )
+    .onChange((v) => this.airboat.lineMaterial.color.set(v));
+    airboatFolder.addColor(this.airboat.settings, 'foamColor' )
+    .onChange((v) => this.airboat.foamMaterial.uniforms['color'].value.set(v));
+
+    const sceneryFolder = gui.addFolder('Scenery');
+    sceneryFolder.addColor(this.scenery, 'sandColor')
+    .onChange((v) => this.scenery.material.uniforms['sandColor'].value.set(v));
+    sceneryFolder.addColor(this.scenery, 'grassColor')
+    .onChange((v) => this.scenery.material.uniforms['grassColor'].value.set(v));
+
+    const waterFolder = gui.addFolder('Water');
+    waterFolder.addColor(this.water, 'waterColorDeep')
+    .onChange((v) => this.water.material.uniforms['waterColorDeep'].value.set(v));
+    waterFolder.addColor(this.water, 'waterColorShallow')
+    .onChange((v) => this.water.material.uniforms['waterColorShallow'].value.set(v));
+    waterFolder.add(this.water, 'surfaceNoiseCutoff', 0, 0.2)
+    .onChange((v) => this.water.material.uniforms['surfaceNoiseCutoff'].value = v);
+    waterFolder.add(this.water, 'edgeFoamCutoffMin', 0, 1)
+    .onChange((v) => this.water.material.uniforms['edgeFoamCutoffMin'].value = v);
+    waterFolder.add(this.water, 'edgeFoamCutoffMax', 0, 1)
+    .onChange((v) => this.water.material.uniforms['edgeFoamCutoffMax'].value = v);
+    waterFolder.add(this.water, 'noiseSpeed', 0, 0.2)
+    .onChange((v) => this.water.material.uniforms['noiseSpeed'].value = v);
+    waterFolder.add(this.water, 'noiseSize', 1, 200)
+    .onChange((v) => this.water.material.uniforms['noiseSize'].value = v);
+
+    this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
   }
 }

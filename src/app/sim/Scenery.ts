@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import * as PLANCK from 'planck'
-import { Water } from './Water';
-import { environment } from 'src/environments/environment';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export class Scenery extends THREE.Mesh {
@@ -9,124 +7,90 @@ export class Scenery extends THREE.Mesh {
     public sandColor = 0xf2d2a9;
     public grassColor = 0x009A17;
 
-    public water: Water;
-    public skyBox: THREE.CubeTexture;
-    public override geometry: THREE.PlaneGeometry;
+    override material: THREE.ShaderMaterial;
 
     private body: PLANCK.Body;
-    private meshLoader = new GLTFLoader();
-    private skyBoxLoader = new THREE.CubeTextureLoader();
-    private textureLoader = new THREE.TextureLoader();
-    private terrainHeightMap = this.textureLoader.load(environment.terrainHeightMapUrl, texture => this.applyHeightMap(texture));
-    
-    public terrainUniforms = {
-        heightMap: { value: this.terrainHeightMap },
-        sandColor: { value: new THREE.Color(this.sandColor) },
-        grassColor: { value: new THREE.Color(this.grassColor) },
-    }
+    private mapSize: number;
 
-    constructor(world: PLANCK.World, mapSize = 100) {
-        // THREE
+    constructor(
+        world: PLANCK.World,
+        mapSvg: Document,
+        heightMap: THREE.Texture,
+        mapSize = 100
+    ) {        
         super();
 
+        this.mapSize = mapSize;
+
+        // THREE
         this.material =  new THREE.ShaderMaterial({
-            uniforms: this.terrainUniforms,
+            uniforms: {
+                heightMap: { value: heightMap },
+                sandColor: { value: new THREE.Color(this.sandColor) },
+                grassColor: { value: new THREE.Color(this.grassColor) },
+            },
             vertexShader: terrainVertexShader,
             fragmentShader: terrainFragmentShader
         })
 
         this.geometry = new THREE.PlaneGeometry(mapSize, mapSize, mapSize * 10, mapSize * 10).rotateX(-Math.PI/2);
 
-        this.skyBox = this.skyBoxLoader.setPath( 'assets/skybox/' ).load([
-            'right.bmp', 'left.bmp',
-            'top.bmp', 'bottom.bmp',
-            'front.bmp', 'back.bmp'
-        ]);;
-
-        // Water
-        this.water = new Water(mapSize);
-        this.add(this.water);
-
         // PLANCK
         this.body = world.createBody();
-
-        // load mapSVG and process it
-        fetch(environment.mapSvgUrl)
-        .then(svg => svg.text())
-        .then(svgText => {
-            const svg = new DOMParser().parseFromString(svgText, "text/html");
-
-            this.loadSvgMeshes(svg, mapSize);
-
-            this.convertSvgPathsToMapWalls(svg, mapSize).forEach(wall => 
-                this.body.createFixture({
-                    shape: wall
-                })    
-            )
-        })
+        this.convertSvgPathsToMapWalls(mapSvg, mapSize).forEach(wall => 
+            this.body.createFixture({
+                shape: wall
+            })    
+        )
     }
 
-    // apply height map using JS instead of shader because we need to access terrain height in JS 
-    private applyHeightMap(texture: THREE.Texture) {
-        const geoS = this.geometry.parameters.widthSegments + 1;
-        const imgS = texture.image.width;
-        const imgToGeoRatio = imgS / geoS;
+    public async loadMeshes(svg: Document, heightMap: THREE.Texture) {
+        const imageData = this.convertTextureToImageData(heightMap);
+        const meshLoader = new GLTFLoader();
 
-        const canvas = document.createElement( 'canvas' );
-        canvas.width = imgS;
-        canvas.height = imgS;
+        return Promise.all([...svg.getElementsByTagName("circle")].map(async point => {
+            const cx = Number(point.getAttribute('cx'))
+            const cy = Number(point.getAttribute('cy'))
+            const type = point.dataset['object'] ?? 'tree';
 
-        const canvasContext = canvas.getContext('2d')!;
-        canvasContext.drawImage(texture.image, 0,0);
+            const posX = (cx - 1/2) * this.mapSize;
+            const posZ = (cy - 1/2) * this.mapSize;
 
-        const imageData = canvasContext.getImageData(0,0,imgS,imgS).data;
-        const verticesData = this.geometry.getAttribute('position');
+            const imageIdx = Math.round(cy * imageData.height) * imageData.width + Math.round(cx * imageData.width);
+            const posY = imageData.data[imageIdx * 4]/255;
 
-        for (let h = 0; h < geoS; h++) {
-            for (let w = 0; w < geoS; w++) {
-                const imageIdx = Math.round(h * imgToGeoRatio) * imgS + Math.round(w * imgToGeoRatio);
-                verticesData.setY(h * geoS + w, imageData[imageIdx * 4]/255 - 0.05);
-            }
-        }
-
-        verticesData.needsUpdate = true;
-        this.geometry.computeVertexNormals();
+            const mesh = await meshLoader.loadAsync(`assets/${type}.glb`);
+        
+            mesh.scene.scale.multiplyScalar(0.6);
+            mesh.scene.position.set(posX, posY, posZ);
+            mesh.scene.rotateY(Math.random() * Math.PI*2);
+            this.add(mesh.scene);
+        }))
     }
 
-    private convertSvgPathsToMapWalls(svg: Document, mapSize: number, segments = 100) {
+    private convertSvgPathsToMapWalls(svg: Document, segments = 200) {
         return [...svg.getElementsByTagName("path")].map(path => {
             const points: PLANCK.Vec2[] = [];
             const length = path.getTotalLength();
 
             for (let i=0; i < segments; i++) {
                 var pt = path.getPointAtLength(i * length / segments);
-                points.push(PLANCK.Vec2((pt.x - 1/2) * mapSize, (1/2 - pt.y) * mapSize));
+                points.push(PLANCK.Vec2((pt.x - 1/2) * this.mapSize, (1/2 - pt.y) * this.mapSize));
             }
 
             return PLANCK.Chain(points, true)
         })
     }
 
-    private loadSvgMeshes(svg: Document, mapSize: number) {
-        const terrainData = this.geometry.getAttribute('position');
-        const geoSize = this.geometry.parameters.widthSegments + 1;
+    private convertTextureToImageData(texture: THREE.Texture) {
+        const canvas = document.createElement( 'canvas' );
+        canvas.width = texture.image.width;
+        canvas.height = texture.image.width;
 
-        for(const point of svg.getElementsByTagName("circle")) {
-            const cx = Number(point.getAttribute('cx'))
-            const cy = Number(point.getAttribute('cy'))
-            const type = point.dataset['object'] ?? 'tree';
+        const canvasContext = canvas.getContext('2d')!;
+        canvasContext.drawImage(texture.image, 0, 0);
 
-            this.meshLoader.load(`assets/${type}.glb`, mesh => {
-                const posX = (cx - 1/2) * mapSize;
-                const posZ = (cy - 1/2) * mapSize;
-                const posY = terrainData.getY(Math.floor(cy * geoSize) * geoSize + Math.floor(cx * geoSize))
-            
-                mesh.scene.scale.multiplyScalar(0.6);
-                mesh.scene.position.set(posX, posY, posZ);
-                mesh.scene.rotateY(Math.random() * Math.PI*2);
-                this.add(mesh.scene);
-            })   
-        }
+        return canvasContext.getImageData(0,0, texture.image.width, texture.image.width);
     }
 }
 
@@ -140,7 +104,8 @@ const terrainVertexShader = `
     void main() {
         vertexHeight = texture2D(heightMap, uv).r;
 
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec3 newPosition = position + normal * vertexHeight - 0.01;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
 `
 
@@ -151,8 +116,8 @@ const terrainFragmentShader = `
     varying float vertexHeight;
 
     void main() {
-        vec3 sand = (1.0 - smoothstep(0.35, 0.45, vertexHeight)) * sandColor;
-        vec3 grass = smoothstep(0.35, 0.45, vertexHeight) * grassColor;
+        vec3 sand = (1.0 - smoothstep(0.3, 0.4, vertexHeight)) * sandColor;
+        vec3 grass = smoothstep(0.3, 0.4, vertexHeight) * grassColor;
 
         gl_FragColor = vec4(sand + grass, 1.0);
     }

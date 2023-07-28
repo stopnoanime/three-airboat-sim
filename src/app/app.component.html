@@ -1,6 +1,9 @@
 <canvas #canvas></canvas>
 
+<div *ngIf="!sim.loaded" class="lds-dual-ring spinner"></div>
+
 <app-hud 
+    *ngIf="sim.loaded"
     [axisValues]="sim.keyboardController.axisValues" 
     [velocity]="sim.airboat.speed"
 ></app-hud>
