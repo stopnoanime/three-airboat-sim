@@ -5,7 +5,7 @@ export class Water extends THREE.Mesh {
     public waterColorDeep = 0x5aaeba;
     public waterColorShallow = 0x13cfd2;
     public surfaceNoiseCutoff = 0.03;
-    public edgeFoamCutoffMin = 0.6;
+    public edgeFoamCutoffMin = 0.72;
     public edgeFoamCutoffMax = 0.8;
     public noiseSpeed = 0.1;
     public noiseSize = 50;

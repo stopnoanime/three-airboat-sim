@@ -57,7 +57,7 @@ export class Scenery extends THREE.Mesh {
             const posZ = (cy - 1/2) * this.mapSize;
 
             const imageIdx = Math.round(cy * imageData.height) * imageData.width + Math.round(cx * imageData.width);
-            const posY = imageData.data[imageIdx * 4]/255;
+            const posY = imageData.data[imageIdx * 4]/255 - 0.2;
 
             const mesh = await meshLoader.loadAsync(`assets/${type}.glb`);
         
@@ -104,7 +104,7 @@ const terrainVertexShader = `
     void main() {
         vertexHeight = texture2D(heightMap, uv).r;
 
-        vec3 newPosition = position + normal * vertexHeight - 0.01;
+        vec3 newPosition = position + normal * vertexHeight - 0.15;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
 `
