@@ -12,6 +12,19 @@ app-hud {
     bottom: 0;
 }
 
+.blur-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+    backdrop-filter: blur(20px);
+
+    display: grid;
+    place-items: center;
+}
+
 .spinner {
     position: absolute;
     top: 50%;

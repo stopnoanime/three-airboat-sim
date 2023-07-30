@@ -1,9 +1,16 @@
+<!-- renderer canvas -->
 <canvas #canvas></canvas>
 
+<!-- loading screen -->
 <div *ngIf="!sim.loaded" class="lds-dual-ring spinner"></div>
 
+<!-- pause menu -->
+<div *ngIf="sim.loaded && !sim.playing" class="blur-bg">
+    <button (click)="sim.start()">Play</button>
+</div>
+
 <app-hud 
-    *ngIf="sim.loaded"
+    *ngIf="sim.playing"
     [axisValues]="sim.keyboardController.axisValues" 
     [velocity]="sim.airboat.speed"
 ></app-hud>

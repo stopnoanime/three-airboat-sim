@@ -8,6 +8,7 @@ import { environment } from 'src/environments/environment';
 import { Scenery } from './Scenery';
 import noise_3d from './noise_3d';
 import { Water } from './Water';
+import { Howl } from 'howler';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,7 @@ import { Water } from './Water';
 export class SimService {
 
   public loaded = false;
+  public playing = false;
 
   public airboat: Airboat;
   public keyboardController: KeyboardController;
@@ -28,6 +30,7 @@ export class SimService {
   private camera: THREE.PerspectiveCamera;
   private dirLight: THREE.DirectionalLight;
   private world: PLANCK.World;
+  private sound: Howl;
 
   constructor() {
     (THREE.ShaderChunk as any).noise_3d = noise_3d;
@@ -58,6 +61,11 @@ export class SimService {
     this.scene.add(this.airboat);
 
     this.keyboardController = new KeyboardController();
+
+    this.sound = new Howl({
+      src: ['assets/bg.mp3'],
+      loop: true,
+    });
   }
 
   public async initialize(canvas: HTMLCanvasElement) {
@@ -99,6 +107,26 @@ export class SimService {
     this.gameLoop();
   }
 
+  public start() {
+    if(!this.loaded || this.playing) return;
+
+    this.sound.play();
+    this.airboat.sound.play();
+
+    this.playing = true;
+
+    this.gameLoop();
+  }
+
+  public stop() {
+    if(!this.loaded || !this.playing) return;
+
+    this.sound.stop();
+    this.airboat.sound.stop();
+
+    this.playing = false;
+  }
+
   public onResize() {
     if(!this.loaded) return;
 
@@ -127,7 +155,7 @@ export class SimService {
     
     this.renderer.render( this.scene, this.camera );
 
-    requestAnimationFrame(() => this.gameLoop());
+    if(this.playing) requestAnimationFrame(() => this.gameLoop());
   }
 
   private initDebugGui() {

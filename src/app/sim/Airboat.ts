@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import * as PLANCK from 'planck';
+import { Howl } from 'howler';
 import { axisValues } from './KeyboardController';
 import { environment } from 'src/environments/environment';
 
 export class Airboat extends THREE.Object3D {
 
     public body: PLANCK.Body;
+
+    public sound: Howl;
 
     public settings = {
         velocityTurningTorque: 0.05,
@@ -156,6 +159,12 @@ export class Airboat extends THREE.Object3D {
         this.add(this.hull, this.wake, this.foam);
         this.position.setY(this.settings.yPosition);
         
+        if(environment.DEBUG) {
+            this.debugArrow = new THREE.ArrowHelper()
+            this.debugArrow.position.setY(0.1)
+            this.add(this.debugArrow)
+        }
+
         //PLANCK
         this.body = world.createBody({
             type: 'dynamic',
@@ -171,12 +180,13 @@ export class Airboat extends THREE.Object3D {
             I: 1,
             mass: 1
         })
-
-        if(environment.DEBUG) {
-            this.debugArrow = new THREE.ArrowHelper()
-            this.debugArrow.position.setY(0.1)
-            this.add(this.debugArrow)
-        }
+        
+        //Sounds
+        this.sound = new Howl({
+            src: ['assets/prop.mp3'],
+            volume: 0,
+            loop: true,
+        });
     }
 
     public updateCamera(camera: THREE.PerspectiveCamera, angle: number) {
@@ -212,7 +222,10 @@ export class Airboat extends THREE.Object3D {
         // Apply the calculated force
         this.body.applyForceToCenter(this.body.getWorldVector(force));
         this.applySway(force);
+
+        // Update look and sounds based on axis values
         this.updateControlSurfaces(axisValues);
+        this.updateSound(axisValues);
     }
 
     public syncBodyAndMesh() {
@@ -251,6 +264,10 @@ export class Airboat extends THREE.Object3D {
         this.propeller.rotateX(axisValues.throttle);
         this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0);
         this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
+    }
+
+    private updateSound(axisValues: axisValues) {
+        this.sound.volume(Math.abs(axisValues.throttle));
     }
 
     private applySway(force: PLANCK.Vec2) {
