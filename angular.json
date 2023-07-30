@@ -34,7 +34,8 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-              "planck"
+              "planck",
+              "howler"
             ]
           },
           "configurations": {

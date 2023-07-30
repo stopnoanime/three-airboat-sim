@@ -1,6 +1,6 @@
+import { config } from "./config";
+
 export const environment = {
+    ...config,
     DEBUG: true,
-    mapSvgUrl: 'assets/map.svg',
-    terrainHeightMapUrl: 'assets/terrain.png',
-    waterHeightMapUrl: 'assets/water.png',
 };

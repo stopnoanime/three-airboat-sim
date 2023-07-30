@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as PLANCK from 'planck'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export class Scenery extends THREE.Mesh {
 
@@ -44,31 +44,51 @@ export class Scenery extends THREE.Mesh {
         )
     }
 
-    public async loadMeshes(svg: Document, heightMap: THREE.Texture) {
+    public placeMeshes(svg: Document, heightMap: THREE.Texture, meshMap: Map<string, GLTF>) {
+        const elements = [...svg.getElementsByTagName("circle")].map(e => ({
+            x: Number(e.getAttribute('cx')),
+            y: Number(e.getAttribute('cy')),
+            type: e.dataset['object'] as string,
+        }));
+
+        //needed for instancedMesh count 
+        const elementOccurrences = elements.reduce((acc, el) => 
+            (acc[el.type] ? acc[el.type]++ : acc[el.type] = 1, acc), 
+            {} as { [index: string]: number }
+        )
+
+        const instancedMeshMap = new Map(Object.entries(elementOccurrences).map(([element,count]) => {
+            const gltf = meshMap.get(element)!;
+            const mesh = (gltf.scene.children[0] as THREE.Mesh);
+
+            const iMesh = new THREE.InstancedMesh(mesh.geometry, mesh.material, count);
+            iMesh.userData['idx'] = 0;
+            this.add(iMesh);
+
+            return [element, iMesh];
+        }))
+
         const imageData = this.convertTextureToImageData(heightMap);
-        const meshLoader = new GLTFLoader();
 
-        return Promise.all([...svg.getElementsByTagName("circle")].map(async point => {
-            const cx = Number(point.getAttribute('cx'))
-            const cy = Number(point.getAttribute('cy'))
-            const type = point.dataset['object'] ?? 'tree';
+        for (const element of elements) {
+            const posX = (element.x - 1/2) * this.mapSize;
+            const posZ = (element.y - 1/2) * this.mapSize;
 
-            const posX = (cx - 1/2) * this.mapSize;
-            const posZ = (cy - 1/2) * this.mapSize;
-
-            const imageIdx = Math.round(cy * imageData.height) * imageData.width + Math.round(cx * imageData.width);
+            const imageIdx = Math.round(element.y * imageData.height) * imageData.width + Math.round(element.x * imageData.width);
             const posY = imageData.data[imageIdx * 4]/255 - 0.2;
 
-            const mesh = await meshLoader.loadAsync(`assets/${type}.glb`);
-        
-            mesh.scene.scale.multiplyScalar(0.6);
-            mesh.scene.position.set(posX, posY, posZ);
-            mesh.scene.rotateY(Math.random() * Math.PI*2);
-            this.add(mesh.scene);
-        }))
+            const matrix = new THREE.Matrix4().compose(
+                new THREE.Vector3(posX, posY, posZ),
+                new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), Math.random() * Math.PI * 2),
+                new THREE.Vector3(0.75,0.75,0.75)
+            );
+            
+            const iMesh = instancedMeshMap.get(element.type)!;
+            iMesh.setMatrixAt(iMesh.userData['idx']++, matrix);
+        }
     }
 
-    private convertSvgPathsToMapWalls(svg: Document, segments = 200) {
+    private convertSvgPathsToMapWalls(svg: Document, segments = 250) {
         return [...svg.getElementsByTagName("path")].map(path => {
             const points: PLANCK.Vec2[] = [];
             const length = path.getTotalLength();

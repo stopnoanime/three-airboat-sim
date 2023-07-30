@@ -9,6 +9,7 @@ import { Scenery } from './Scenery';
 import noise_3d from './noise_3d';
 import { Water } from './Water';
 import { Howl } from 'howler';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({
   providedIn: 'root'
@@ -17,10 +18,13 @@ export class SimService {
 
   public loaded = false;
   public playing = false;
+  public loadingProgress = 0;
 
   public airboat: Airboat;
   public keyboardController: KeyboardController;
   
+  public backgroundColor = 0xb9e0fe;
+
   private water!: Water;
   private scenery!: Scenery;
   private renderer!: THREE.WebGLRenderer;
@@ -37,6 +41,7 @@ export class SimService {
 
     this.camera = new THREE.PerspectiveCamera(75);
     this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(this.backgroundColor);
     this.clock = new THREE.Clock();
 
     this.world = new PLANCK.World({
@@ -65,7 +70,10 @@ export class SimService {
     this.sound = new Howl({
       src: ['assets/bg.mp3'],
       loop: true,
+      volume: 0.5
     });
+
+    THREE.DefaultLoadingManager.onProgress = (_, l, t) => this.loadingProgress = l/t;
   }
 
   public async initialize(canvas: HTMLCanvasElement) {
@@ -78,26 +86,23 @@ export class SimService {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    const meshLoader = new GLTFLoader();
+    const loader = new THREE.FileLoader();
     const textureLoader = new THREE.TextureLoader();
-    const cubeTextureLoader = new THREE.CubeTextureLoader().setPath('assets/skybox/');
 
-    const terrainHeightMap = textureLoader.loadAsync(environment.terrainHeightMapUrl);
     const waterHeightMap = textureLoader.loadAsync(environment.waterHeightMapUrl);
-    const mapSvg = fetch(environment.mapSvgUrl).then(r => r.text()).then(t => new DOMParser().parseFromString(t, "text/html"));
-    const skyBox = cubeTextureLoader.loadAsync([
-      'right.bmp', 'left.bmp',
-      'top.bmp', 'bottom.bmp',
-      'front.bmp', 'back.bmp'
-    ]);
+    const terrainHeightMap = textureLoader.loadAsync(environment.terrainHeightMapUrl);
+    const meshPromises = environment.meshes.map(m => meshLoader.loadAsync(`assets/${m}.glb`));
+    const mapSvg = loader.setResponseType('document').setMimeType("text/html" as any).loadAsync(environment.mapSvgUrl) as any;
+
+    this.scenery = new Scenery(this.world, await mapSvg, await terrainHeightMap);
+    const meshMap = new Map((await Promise.all(meshPromises)).map((v,i) => [environment.meshes[i], v]));
+    this.scenery.placeMeshes(await mapSvg, await terrainHeightMap, meshMap);
+    this.scene.add(this.scenery);
 
     this.water = new Water(await waterHeightMap);
     this.scene.add(this.water);
 
-    this.scenery = new Scenery(this.world, await mapSvg, await terrainHeightMap);
-    await this.scenery.loadMeshes(await mapSvg, await terrainHeightMap);
-    this.scene.add(this.scenery);
-
-    this.scene.background = await skyBox;
 
     if(environment.DEBUG) this.initDebugGui();
 
@@ -191,6 +196,8 @@ export class SimService {
     .onChange((v) => this.scenery.material.uniforms['sandColor'].value.set(v));
     sceneryFolder.addColor(this.scenery, 'grassColor')
     .onChange((v) => this.scenery.material.uniforms['grassColor'].value.set(v));
+    sceneryFolder.addColor(this, 'backgroundColor')
+    .onChange((v) => (this.scene.background as THREE.Color).set(v));
 
     const waterFolder = gui.addFolder('Water');
     waterFolder.addColor(this.water, 'waterColorDeep')

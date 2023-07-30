@@ -2,6 +2,8 @@
 <canvas #canvas></canvas>
 
 <!-- loading screen -->
+<div *ngIf="!sim.loaded" class="spinner">{{sim.loadingProgress | percent}}</div>
+
 <div *ngIf="!sim.loaded" class="lds-dual-ring spinner"></div>
 
 <!-- pause menu -->
