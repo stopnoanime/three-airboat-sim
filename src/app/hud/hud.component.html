@@ -10,12 +10,44 @@
         y="1" width="0.1" fill="red" 
     />
 
-    <rect [attr.y]="1 - 0.025" height="0.05" width="0.1" fill="black" />
+    <rect [attr.y]="1 - 0.0125" height="0.025" width="0.1" fill="#e5e5e5" />
 </svg>
 
-<div class="bottom">
-    <span>{{velocity | number: '1.2-2'}}</span>
+<div class="bottom-center">
+    <div class="velocity">{{velocity | number: '1.2-2'}} m/s</div>
     <svg viewBox="0 0 1.02 0.1" class="yaw">
-        <rect [attr.x]="0.5 + axisValues.yaw/2" width="0.02" height="0.1" />
+        <rect [attr.x]="0.5 + axisValues.yaw/2" width="0.02" height="0.1" fill="#e5e5e5" />
     </svg>
+</div>
+
+<div class="help-hover">
+    <a class="help-button">?</a>
+    <div class="help-tooltip">
+        <table>
+            <tr>
+                <td>Throttle Plus</td>
+                <td>W</td>
+            </tr>
+            <tr>
+                <td>Throttle Minus</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td>Yaw Left</td>
+                <td>A</td>
+            </tr>
+            <tr>
+                <td>Yaw Right</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td>Restart</td>
+                <td>R</td>
+            </tr>
+            <tr>
+                <td>Pause</td>
+                <td>Esc</td>
+            </tr>
+        </table>
+    </div>
 </div>

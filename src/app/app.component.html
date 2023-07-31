@@ -1,18 +1,19 @@
-<!-- renderer canvas -->
-<canvas #canvas></canvas>
+<div class="grid">
+    <!-- renderer canvas -->
+    <canvas #canvas></canvas>
 
-<!-- loading screen -->
-<div *ngIf="!sim.loaded" class="spinner">{{sim.loadingProgress | percent}}</div>
+    <app-loading-screen 
+        *ngIf="!sim.loaded" 
+        [loadingProgress]="sim.loadingProgress"
+    ></app-loading-screen>
 
-<div *ngIf="!sim.loaded" class="lds-dual-ring spinner"></div>
+    <app-pause-screen
+        *ngIf="sim.loaded && !sim.playing"
+    ></app-pause-screen>
 
-<!-- pause menu -->
-<div *ngIf="sim.loaded && !sim.playing" class="blur-bg">
-    <button (click)="sim.start()">Play</button>
+    <app-hud 
+        *ngIf="sim.playing"
+        [axisValues]="sim.keyboardController.axisValues" 
+        [velocity]="sim.airboat.speed"
+    ></app-hud>
 </div>
-
-<app-hud 
-    *ngIf="sim.playing"
-    [axisValues]="sim.keyboardController.axisValues" 
-    [velocity]="sim.airboat.speed"
-></app-hud>

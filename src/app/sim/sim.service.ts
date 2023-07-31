@@ -9,7 +9,7 @@ import { Scenery } from './Scenery';
 import noise_3d from './noise_3d';
 import { Water } from './Water';
 import { Howl } from 'howler';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,7 @@ export class SimService {
   public airboat: Airboat;
   public keyboardController: KeyboardController;
   
-  public backgroundColor = 0xb9e0fe;
+  public backgroundColor = 0xbae6fd;
 
   private water!: Water;
   private scenery!: Scenery;
@@ -52,13 +52,11 @@ export class SimService {
 
     this.dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.camera.left = -0.5
-    this.dirLight.shadow.camera.right = 0.5
-    this.dirLight.shadow.camera.top = 0.5
-    this.dirLight.shadow.camera.bottom = -0.5
-    this.dirLight.shadow.camera.far = 2;
-    this.dirLight.shadow.mapSize.width = 1024;
-    this.dirLight.shadow.mapSize.height = 1024;
+    this.dirLight.shadow.camera.left = -0.3
+    this.dirLight.shadow.camera.right = 0.3
+    this.dirLight.shadow.camera.top = 0.3
+    this.dirLight.shadow.camera.bottom = -0.3
+    this.dirLight.shadow.camera.far = 1.5;
     this.scene.add(this.dirLight);
 
     this.airboat = new Airboat(this.world);
@@ -92,12 +90,11 @@ export class SimService {
 
     const waterHeightMap = textureLoader.loadAsync(environment.waterHeightMapUrl);
     const terrainHeightMap = textureLoader.loadAsync(environment.terrainHeightMapUrl);
-    const meshPromises = environment.meshes.map(m => meshLoader.loadAsync(`assets/${m}.glb`));
     const mapSvg = loader.setResponseType('document').setMimeType("text/html" as any).loadAsync(environment.mapSvgUrl) as any;
+    const meshPromises = environment.meshes.map(m => meshLoader.loadAsync(`assets/${m}.glb`).then(g => [m, g] as [string, GLTF]));
 
     this.scenery = new Scenery(this.world, await mapSvg, await terrainHeightMap);
-    const meshMap = new Map((await Promise.all(meshPromises)).map((v,i) => [environment.meshes[i], v]));
-    this.scenery.placeMeshes(await mapSvg, await terrainHeightMap, meshMap);
+    this.scenery.placeMeshes(await mapSvg, await terrainHeightMap, new Map(await Promise.all(meshPromises)));
     this.scene.add(this.scenery);
 
     this.water = new Water(await waterHeightMap);
@@ -140,6 +137,8 @@ export class SimService {
     this.renderer.setSize(rect.width, rect.height, false);
     this.camera.aspect = rect.width / rect.height;
     this.camera.updateProjectionMatrix();
+
+    this.renderer.render( this.scene, this.camera );
   }
 
   public reset() {
@@ -155,7 +154,7 @@ export class SimService {
     this.airboat.updateTime(this.clock.getElapsedTime());
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
 
-    this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,1,1)));
+    this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,0.6,0.6)));
     this.water.updateTime(this.clock.getElapsedTime());
     
     this.renderer.render( this.scene, this.camera );

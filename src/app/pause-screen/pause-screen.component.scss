@@ -1,0 +1,39 @@
+:host {
+    backdrop-filter: blur(20px);
+    display: grid;
+    place-items: center;
+    grid-auto-rows: 1fr;
+    gap: 16px;
+}
+
+header {
+    align-self: start;
+}
+
+h1 {
+    font-size: 60px;
+    text-align: center;
+}
+
+button {
+    font-size: 32px;
+    font-weight: 400;
+    background-color: #0ea5e9;
+    border: 0;
+    border-radius: 8px;
+    padding: 4px 12px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #38bdf8;
+    }
+}
+
+footer {
+    margin-bottom: 10px;
+    align-self: end;
+}
+
+a {
+    text-decoration: none;
+}
