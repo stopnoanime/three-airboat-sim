@@ -1,73 +1,74 @@
 .bottom-center {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%); 
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .throttle {
-    position: absolute;
-    left: 0;
-    bottom: 0;
+  position: absolute;
+  left: 0;
+  bottom: 0;
 
-    height: 300px;
-    max-height: calc(100vh - 64px);
+  height: 300px;
+  max-height: calc(100vh - 64px);
 }
 
 .yaw {
-    width: 200px;
-    max-width: calc(100vw - 96px);
+  width: 200px;
+  max-width: calc(100vw - 96px);
 }
 
-.throttle, .yaw, .velocity  {
-    padding: 4px;
-    margin: 4px;
-    background-color: black;
-    opacity: 70%;
-    border-radius: 6px;
+.throttle,
+.yaw,
+.velocity {
+  padding: 4px;
+  margin: 4px;
+  background-color: black;
+  opacity: 70%;
+  border-radius: 6px;
 }
 
 .velocity {
-    margin-bottom: 0px;
-    padding-left: 8px;
-    padding-right: 8px;
+  margin-bottom: 0px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .help-hover {
-    display: inline-block;
-    margin: 4px;
+  display: inline-block;
+  margin: 4px;
 }
 
 .help-button {
-    height: 32px;
-    width: 32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-    background-color: black;
-    border-radius: 100%;
-    opacity: 70%;
+  background-color: black;
+  border-radius: 100%;
+  opacity: 70%;
 }
 
 .help-tooltip {
-    display: none;
-    background-color: black;
-    border-radius: 4px;
-    opacity: 70%;
-    margin-top: 4px;
-    font-size: 14px;
+  display: none;
+  background-color: black;
+  border-radius: 4px;
+  opacity: 70%;
+  margin-top: 4px;
+  font-size: 14px;
 
-    table {
-        border-spacing: 8px 4px;
-    }
+  table {
+    border-spacing: 8px 4px;
+  }
 }
 
-.help-hover:hover .help-tooltip
-{
-    display: inline-block;
+.help-hover:hover .help-tooltip {
+  display: inline-block;
 }

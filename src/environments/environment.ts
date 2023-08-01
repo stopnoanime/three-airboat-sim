@@ -1,6 +1,6 @@
-import { config } from "./config";
+import { config } from './config';
 
 export const environment = {
-    ...config,
-    DEBUG: false,
+  ...config,
+  DEBUG: false,
 };

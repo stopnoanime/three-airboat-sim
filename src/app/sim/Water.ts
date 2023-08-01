@@ -1,48 +1,49 @@
 import * as THREE from 'three';
 
 export class Water extends THREE.Mesh {
-    
-    public waterColorDeep = 0x5aaeba;
-    public waterColorShallow = 0x13cfd2;
-    public surfaceNoiseCutoff = 0.03;
-    public edgeFoamCutoffMin = 0.72;
-    public edgeFoamCutoffMax = 0.8;
-    public noiseSpeed = 0.1;
-    public noiseSize = 50;
+  public waterColorDeep = 0x5aaeba;
+  public waterColorShallow = 0x13cfd2;
+  public surfaceNoiseCutoff = 0.03;
+  public edgeFoamCutoffMin = 0.72;
+  public edgeFoamCutoffMax = 0.8;
+  public noiseSpeed = 0.1;
+  public noiseSize = 50;
 
-    override material: THREE.ShaderMaterial;
+  override material: THREE.ShaderMaterial;
 
-    constructor(heightMap: THREE.Texture, size = 100) {
-        super();
+  constructor(heightMap: THREE.Texture, size = 100) {
+    super();
 
-        this.geometry = new THREE.PlaneGeometry(size, size, size, size).rotateX(-Math.PI/2);
+    this.geometry = new THREE.PlaneGeometry(size, size, size, size).rotateX(
+      -Math.PI / 2,
+    );
 
-        this.material = new THREE.ShaderMaterial({
-            uniforms: THREE.UniformsUtils.merge([
-                {
-                    time: { value: 0 },
-                    heightMap: { value: heightMap },
-                    noiseSpeed: { value: this.noiseSpeed },
-                    noiseSize: { value: this.noiseSize },
-                    surfaceNoiseCutoff: { value: this.surfaceNoiseCutoff },
-                    edgeFoamCutoffMin: { value: this.edgeFoamCutoffMin },
-                    edgeFoamCutoffMax: { value: this.edgeFoamCutoffMax },
-                    waterColorDeep: { value: new THREE.Color(this.waterColorDeep) },
-                    waterColorShallow: { value: new THREE.Color(this.waterColorShallow) },
-                },
-                THREE.UniformsLib.lights,
-            ]),
-            vertexShader: waterVertexShader,
-            fragmentShader: waterFragmentShader,
-            lights: true,
-        })
+    this.material = new THREE.ShaderMaterial({
+      uniforms: THREE.UniformsUtils.merge([
+        {
+          time: { value: 0 },
+          heightMap: { value: heightMap },
+          noiseSpeed: { value: this.noiseSpeed },
+          noiseSize: { value: this.noiseSize },
+          surfaceNoiseCutoff: { value: this.surfaceNoiseCutoff },
+          edgeFoamCutoffMin: { value: this.edgeFoamCutoffMin },
+          edgeFoamCutoffMax: { value: this.edgeFoamCutoffMax },
+          waterColorDeep: { value: new THREE.Color(this.waterColorDeep) },
+          waterColorShallow: { value: new THREE.Color(this.waterColorShallow) },
+        },
+        THREE.UniformsLib.lights,
+      ]),
+      vertexShader: waterVertexShader,
+      fragmentShader: waterFragmentShader,
+      lights: true,
+    });
 
-        this.receiveShadow = true;
-    }
+    this.receiveShadow = true;
+  }
 
-    public updateTime(t: number) {
-        this.material.uniforms['time'].value = t;
-    }
+  public updateTime(t: number) {
+    this.material.uniforms['time'].value = t;
+  }
 }
 
 //Info on how to make shader material with shadows taken from here: https://gist.github.com/wmcmurray/6696fc95f25bbd2401d72a74e9493261
@@ -67,7 +68,7 @@ const waterVertexShader = `
         vUv = uv;
         vertexHeight = texture2D(heightMap, uv).r;
     }
-`
+`;
 
 const waterFragmentShader = `
     #include <common>
@@ -101,4 +102,4 @@ const waterFragmentShader = `
 
         gl_FragColor = vec4( mix(finalColor, vec3(0, 0, 0), (1.0 - getShadowMask() ) * 0.5), 1.0);
     }
-`
+`;

@@ -6,18 +6,14 @@ import { Component, HostBinding, Input } from '@angular/core';
   templateUrl: './loading-screen.component.html',
   styleUrls: ['./loading-screen.component.scss'],
   animations: [
-    trigger(
-      'leaveAnimation', [
-        transition(':leave', [
-          animate('500ms', style({ opacity: 0}))
-        ])
-      ]
-    )
+    trigger('leaveAnimation', [
+      transition(':leave', [animate('500ms', style({ opacity: 0 }))]),
+    ]),
   ],
 })
 export class LoadingScreenComponent {
   @HostBinding('@leaveAnimation') leaveAnimation = true;
 
-  @Input() 
+  @Input()
   loadingProgress = 0;
 }

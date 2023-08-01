@@ -12,13 +12,10 @@ import { PauseScreenComponent } from './pause-screen/pause-screen.component';
     AppComponent,
     HudComponent,
     LoadingScreenComponent,
-    PauseScreenComponent
+    PauseScreenComponent,
   ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule
-  ],
+  imports: [BrowserModule, BrowserAnimationsModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

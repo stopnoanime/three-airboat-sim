@@ -7,17 +7,13 @@ import { animate, style, transition, trigger } from '@angular/animations';
   templateUrl: './pause-screen.component.html',
   styleUrls: ['./pause-screen.component.scss'],
   animations: [
-    trigger(
-      'leaveAnimation', [
-        transition(':leave', [
-          animate('200ms', style({ opacity: 0}))
-        ])
-      ]
-    )
+    trigger('leaveAnimation', [
+      transition(':leave', [animate('200ms', style({ opacity: 0 }))]),
+    ]),
   ],
 })
 export class PauseScreenComponent {
-  constructor(public sim: SimService) {};
+  constructor(public sim: SimService) {}
 
   @HostBinding('@leaveAnimation') leaveAnimation = true;
 }
