@@ -18,14 +18,15 @@ h1 {
 button {
   font-size: 32px;
   font-weight: 400;
-  background-color: #0ea5e9;
+  background-color: #0284c7;
   border: 0;
   border-radius: 8px;
   padding: 4px 12px;
   cursor: pointer;
+  user-select: none;
 
   &:hover {
-    background-color: #38bdf8;
+    background-color: #0ea5e9;
   }
 }
 

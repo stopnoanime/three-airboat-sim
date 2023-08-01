@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { HudComponent } from './hud/hud.component';
 import { LoadingScreenComponent } from './loading-screen/loading-screen.component';
 import { PauseScreenComponent } from './pause-screen/pause-screen.component';
+import { TouchAxisDirective } from './touch-axis.directive';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,7 @@ import { PauseScreenComponent } from './pause-screen/pause-screen.component';
     HudComponent,
     LoadingScreenComponent,
     PauseScreenComponent,
+    TouchAxisDirective,
   ],
   imports: [BrowserModule, BrowserAnimationsModule],
   providers: [],

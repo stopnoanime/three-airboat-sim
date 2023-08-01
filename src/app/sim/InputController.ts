@@ -1,4 +1,7 @@
-export class KeyboardController {
+export class InputController {
+  public throttleOverride = false;
+  public yawOverride = false;
+
   public keyMap = {
     KeyW: 'throttleUp',
     KeyS: 'throttleDown',
@@ -38,18 +41,21 @@ export class KeyboardController {
   }
 
   public stepAxisValues(dt: number) {
-    this.axisValues.throttle = this.stepSingleAxis(
-      this.keyState.throttleDown,
-      this.keyState.throttleUp,
-      this.axisValues.throttle,
-      dt,
-    );
-    this.axisValues.yaw = this.stepSingleAxis(
-      this.keyState.yawLeft,
-      this.keyState.yawRight,
-      this.axisValues.yaw,
-      dt,
-    );
+    if (!this.throttleOverride)
+      this.axisValues.throttle = this.stepSingleAxis(
+        this.keyState.throttleDown,
+        this.keyState.throttleUp,
+        this.axisValues.throttle,
+        dt,
+      );
+
+    if (!this.yawOverride)
+      this.axisValues.yaw = this.stepSingleAxis(
+        this.keyState.yawLeft,
+        this.keyState.yawRight,
+        this.axisValues.yaw,
+        dt,
+      );
 
     this.axisValues.throttle = this.minMaxAndRound(
       this.axisValues.throttle,
@@ -91,7 +97,8 @@ export class KeyboardController {
       value += speed * (keyUp ? 1 : -1);
     } else if (value != 0) {
       // Move value back to 0 if no keys are pressed (or both are pressed at the same time)
-      value += value > 0 ? -speed : +speed;
+      if (Math.abs(value) <= speed) value = 0;
+      else value += value > 0 ? -speed : +speed;
     }
 
     return value;

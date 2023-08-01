@@ -1,13 +1,19 @@
-<svg viewBox="0 0 0.1 1.5" class="throttle">
+<svg
+  viewBox="0 0 0.1 1.5"
+  class="throttle"
+  appTouchAxis="y"
+  (axisMove)="throttleMove($event)"
+  (axisEnd)="this.sim.keyboardController.throttleOverride = false"
+>
   <rect
-    [attr.height]="axisValues.throttle > 0 ? axisValues.throttle : 0"
-    [attr.y]="1 - axisValues.throttle"
+    [attr.height]="throttle > 0 ? throttle : 0"
+    [attr.y]="1 - throttle"
     width="0.1"
     fill="green"
   />
 
   <rect
-    [attr.height]="axisValues.throttle < 0 ? -axisValues.throttle : 0"
+    [attr.height]="throttle < 0 ? -throttle : 0"
     y="1"
     width="0.1"
     fill="red"
@@ -17,20 +23,22 @@
 </svg>
 
 <div class="bottom-center">
-  <div class="velocity">{{ velocity | number: "1.2-2" }} m/s</div>
-  <svg viewBox="0 0 1.02 0.1" class="yaw">
-    <rect
-      [attr.x]="0.5 + axisValues.yaw / 2"
-      width="0.02"
-      height="0.1"
-      fill="#e5e5e5"
-    />
+  <div class="speed">{{ speed | number: "1.2-2" }} m/s</div>
+  <svg
+    viewBox="0 0 1.02 0.1"
+    class="yaw"
+    appTouchAxis="x"
+    (axisMove)="yawMove($event)"
+    (axisEnd)="this.sim.keyboardController.yawOverride = false"
+  >
+    <rect [attr.x]="0.5 + yaw / 2" width="0.02" height="0.1" fill="#e5e5e5" />
   </svg>
 </div>
 
 <div class="help-hover">
   <a class="help-button">?</a>
   <div class="help-tooltip">
+    <h3>Desktop:</h3>
     <table>
       <tr>
         <td>Throttle Plus</td>
@@ -57,5 +65,10 @@
         <td>Esc</td>
       </tr>
     </table>
+    <h3>Mobile:</h3>
+    <div>
+      Slide over the throttle <br />
+      and yaw sliders.
+    </div>
   </div>
 </div>

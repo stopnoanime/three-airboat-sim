@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import * as PLANCK from 'planck';
 import { Airboat } from './Airboat';
-import { KeyboardController } from './KeyboardController';
+import { InputController } from './InputController';
 import { GUI } from 'dat.gui';
 import { environment } from 'src/environments/environment';
 import { Scenery } from './Scenery';
@@ -20,7 +20,7 @@ export class SimService {
   public loadingProgress = 0;
 
   public airboat: Airboat;
-  public keyboardController: KeyboardController;
+  public keyboardController: InputController;
 
   public backgroundColor = 0xbae6fd;
 
@@ -60,7 +60,7 @@ export class SimService {
     this.dirLight.target = this.airboat;
     this.scene.add(this.airboat);
 
-    this.keyboardController = new KeyboardController();
+    this.keyboardController = new InputController();
 
     this.sound = new Howl({
       src: ['assets/bg.mp3'],

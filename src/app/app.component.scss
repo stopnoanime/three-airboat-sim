@@ -1,11 +1,12 @@
 .grid {
   display: grid;
   overflow: hidden;
+  height: 100%;
 }
 
 .grid > * {
   grid-area: 1/1/2/2;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
 }

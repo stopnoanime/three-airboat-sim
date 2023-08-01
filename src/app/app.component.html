@@ -9,9 +9,5 @@
 
   <app-pause-screen *ngIf="sim.loaded && !sim.playing"></app-pause-screen>
 
-  <app-hud
-    *ngIf="sim.playing"
-    [axisValues]="sim.keyboardController.axisValues"
-    [velocity]="sim.airboat.speed"
-  ></app-hud>
+  <app-hud *ngIf="sim.playing"></app-hud>
 </div>

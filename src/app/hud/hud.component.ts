@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { axisValues } from '../sim/KeyboardController';
+import { Component } from '@angular/core';
+import { SimService } from '../sim/sim.service';
 
 @Component({
   selector: 'app-hud',
@@ -7,6 +7,27 @@ import { axisValues } from '../sim/KeyboardController';
   styleUrls: ['./hud.component.scss'],
 })
 export class HudComponent {
-  @Input() axisValues!: axisValues;
-  @Input() velocity!: number;
+  get throttle() {
+    return this.sim.keyboardController.axisValues.throttle;
+  }
+
+  get yaw() {
+    return this.sim.keyboardController.axisValues.yaw;
+  }
+
+  get speed() {
+    return this.sim.airboat.speed;
+  }
+
+  constructor(public sim: SimService) {}
+
+  throttleMove(ratio: number) {
+    this.sim.keyboardController.throttleOverride = true;
+    this.sim.keyboardController.axisValues.throttle = (1 - ratio) * 1.5 - 0.5;
+  }
+
+  yawMove(ratio: number) {
+    this.sim.keyboardController.yawOverride = true;
+    this.sim.keyboardController.axisValues.yaw = ratio * 2 - 1;
+  }
 }

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as PLANCK from 'planck';
 import { Howl } from 'howler';
-import { axisValues } from './KeyboardController';
+import { axisValues } from './InputController';
 import { environment } from 'src/environments/environment';
 
 export class Airboat extends THREE.Object3D {

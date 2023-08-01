@@ -16,24 +16,33 @@
 
   height: 300px;
   max-height: calc(100vh - 64px);
+
+  @media (max-width: 600px) {
+    height: 420px;
+  }
 }
 
 .yaw {
   width: 200px;
-  max-width: calc(100vw - 96px);
+  max-width: calc(100vw - 108px);
+
+  @media (max-width: 600px) {
+    width: 280px;
+  }
 }
 
 .throttle,
 .yaw,
-.velocity {
+.speed {
   padding: 4px;
   margin: 4px;
   background-color: black;
   opacity: 70%;
   border-radius: 6px;
+  user-select: none;
 }
 
-.velocity {
+.speed {
   margin-bottom: 0px;
   padding-left: 8px;
   padding-right: 8px;
@@ -63,9 +72,14 @@
   opacity: 70%;
   margin-top: 4px;
   font-size: 14px;
+  padding: 4px;
 
-  table {
-    border-spacing: 8px 4px;
+  h3 {
+    margin: 4px 0px;
+  }
+
+  div {
+    margin-left: 4px;
   }
 }
 
