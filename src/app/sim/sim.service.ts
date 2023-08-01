@@ -30,7 +30,6 @@ export class SimService {
   private renderer!: THREE.WebGLRenderer;
 
   private scene: THREE.Scene;
-  private clock: THREE.Clock;
   private camera: THREE.PerspectiveCamera;
   private dirLight: THREE.DirectionalLight;
   private world: PLANCK.World;
@@ -42,7 +41,6 @@ export class SimService {
     this.camera = new THREE.PerspectiveCamera(75);
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(this.backgroundColor);
-    this.clock = new THREE.Clock();
 
     this.world = new PLANCK.World({
       gravity: new PLANCK.Vec2(0,0),
@@ -100,13 +98,12 @@ export class SimService {
     this.water = new Water(await waterHeightMap);
     this.scene.add(this.water);
 
-
     if(environment.DEBUG) this.initDebugGui();
 
     this.loaded = true;
 
     this.onResize();
-    this.gameLoop();
+    this.startGameLoop();
   }
 
   public start() {
@@ -117,7 +114,7 @@ export class SimService {
 
     this.playing = true;
 
-    this.gameLoop();
+    this.startGameLoop();
   }
 
   public stop() {
@@ -145,21 +142,31 @@ export class SimService {
     this.airboat.reset();
   }
 
-  private gameLoop() {
-    this.airboat.calculateForces(this.keyboardController.stepAxisValues());
+  private startGameLoop() {
+    const t = performance.now() / 1000;
+    this.gameLoop(t, t);
+  }
 
-    this.world.step(1/144);
+  private gameLoop(currentTime: number, previousTime: number) {
+    let frameTime = Math.min(currentTime - previousTime, 1/20);
+
+    const axisValues = this.keyboardController.stepAxisValues(frameTime);
+
+    this.airboat.calculateForces(axisValues);
+    this.world.step(frameTime);
 
     this.airboat.syncBodyAndMesh();
-    this.airboat.updateTime(this.clock.getElapsedTime());
+    this.airboat.updateSound(axisValues);
+    this.airboat.updateControlSurfaces(axisValues);
+    this.airboat.updateTime(currentTime);
     this.airboat.updateCamera(this.camera, this.keyboardController.getCameraDirection());
 
     this.dirLight.position.copy(this.airboat.position.clone().add(new THREE.Vector3(0,0.6,0.6)));
-    this.water.updateTime(this.clock.getElapsedTime());
+    this.water.updateTime(currentTime);
     
     this.renderer.render( this.scene, this.camera );
 
-    if(this.playing) requestAnimationFrame(() => this.gameLoop());
+    if(this.playing) requestAnimationFrame((t) => this.gameLoop(t / 1000, currentTime));
   }
 
   private initDebugGui() {

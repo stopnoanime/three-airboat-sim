@@ -34,9 +34,9 @@ export class KeyboardController {
         this.keyState[this.keyMap[event.code as keyof typeof this.keyMap] as keyof typeof this.keyState] = event.type == 'keydown';
     }
 
-    public stepAxisValues() {
-        this.axisValues.throttle = this.stepSingleAxis(this.keyState.throttleDown, this.keyState.throttleUp, this.axisValues.throttle)
-        this.axisValues.yaw = this.stepSingleAxis(this.keyState.yawLeft, this.keyState.yawRight, this.axisValues.yaw)
+    public stepAxisValues(dt: number) {
+        this.axisValues.throttle = this.stepSingleAxis(this.keyState.throttleDown, this.keyState.throttleUp, this.axisValues.throttle, dt)
+        this.axisValues.yaw = this.stepSingleAxis(this.keyState.yawLeft, this.keyState.yawRight, this.axisValues.yaw, dt)
 
         this.axisValues.throttle = this.minMaxAndRound(this.axisValues.throttle, -0.5, 1)
         this.axisValues.yaw = this.minMaxAndRound(this.axisValues.yaw, -1, 1)
@@ -60,11 +60,13 @@ export class KeyboardController {
         return 0
     }
 
-    private stepSingleAxis(keyDown: boolean, keyUp: boolean, value: number) {
+    private stepSingleAxis(keyDown: boolean, keyUp: boolean, value: number, dt: number) {
+        const speed = dt * 2.5;
+
         if(keyUp != keyDown) {
-            value += 0.02 * (keyUp ? 1 : -1)
+            value += speed * (keyUp ? 1 : -1)
         } else if(value != 0) { // Move value back to 0 if no keys are pressed (or both are pressed at the same time)
-            value += value > 0 ? -0.02 : + 0.02;
+            value += value > 0 ? -speed : + speed;
         }
 
         return value

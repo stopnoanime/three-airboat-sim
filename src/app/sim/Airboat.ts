@@ -11,12 +11,12 @@ export class Airboat extends THREE.Object3D {
     public sound: Howl;
 
     public settings = {
-        velocityTurningTorque: 0.05,
-        thrustTurningTorque: 0.9,
-        turningFriction: 0.6,
+        velocityTurningTorque: 0.06,
+        thrustTurningTorque: 1.3,
+        turningFriction: 1,
         sidewaysDrag: 2,
         frontalDrag: 0.2,
-        thrust: 2.5,
+        thrust: 3,
         baseCameraDistance: 1,
         cameraDistanceVelocityScale: 0.2,
         yPosition: 0.04,
@@ -172,7 +172,8 @@ export class Airboat extends THREE.Object3D {
 
         this.body.createFixture({
             shape: new PLANCK.Box(0.2,0.11),
-            friction: 0,
+            friction: 10,
+            restitution: 0.05,
         })
 
         this.body.setMassData({
@@ -222,10 +223,6 @@ export class Airboat extends THREE.Object3D {
         // Apply the calculated force
         this.body.applyForceToCenter(this.body.getWorldVector(force));
         this.applySway(force);
-
-        // Update look and sounds based on axis values
-        this.updateControlSurfaces(axisValues);
-        this.updateSound(axisValues);
     }
 
     public syncBodyAndMesh() {
@@ -260,13 +257,13 @@ export class Airboat extends THREE.Object3D {
         this.foamMaterial.uniforms['time'].value = t;
     }
 
-    private updateControlSurfaces(axisValues: axisValues) {
+    public updateControlSurfaces(axisValues: axisValues) {
         this.propeller.rotateX(axisValues.throttle);
         this.rudder.rotation.set(0, axisValues.yaw * Math.PI/4, 0);
         this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
     }
 
-    private updateSound(axisValues: axisValues) {
+    public updateSound(axisValues: axisValues) {
         this.sound.volume(Math.abs(axisValues.throttle));
     }
 
