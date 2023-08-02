@@ -1,76 +1,88 @@
-<svg
-  viewBox="0 0 0.1 1.5"
-  class="throttle"
-  appTouchAxis="y"
-  (axisMove)="throttleMove($event)"
-  (axisEnd)="this.sim.keyboardController.throttleOverride = false"
+<div
+  class="touch"
+  appTouchCamera
+  (cameraMove)="cameraMove($event)"
+  (cameraEnd)="sim.keyboardController.cameraOverride = false"
 >
-  <rect
-    [attr.height]="throttle > 0 ? throttle : 0"
-    [attr.y]="1 - throttle"
-    width="0.1"
-    fill="green"
-  />
-
-  <rect
-    [attr.height]="throttle < 0 ? -throttle : 0"
-    y="1"
-    width="0.1"
-    fill="red"
-  />
-
-  <rect [attr.y]="1 - 0.0125" height="0.025" width="0.1" fill="#e5e5e5" />
-</svg>
-
-<div class="bottom-center">
-  <div class="speed">{{ speed | number: "1.2-2" }} m/s</div>
   <svg
-    viewBox="0 0 1.02 0.1"
-    class="yaw"
-    appTouchAxis="x"
-    (axisMove)="yawMove($event)"
-    (axisEnd)="this.sim.keyboardController.yawOverride = false"
+    viewBox="0 0 0.1 1.5"
+    class="throttle"
+    appTouchAxis="y"
+    (axisMove)="throttleMove($event)"
+    (axisEnd)="this.sim.keyboardController.throttleOverride = false"
   >
-    <rect [attr.x]="0.5 + yaw / 2" width="0.02" height="0.1" fill="#e5e5e5" />
+    <rect
+      [attr.height]="throttle > 0 ? throttle : 0"
+      [attr.y]="1 - throttle"
+      width="0.1"
+      fill="green"
+    />
+
+    <rect
+      [attr.height]="throttle < 0 ? -throttle : 0"
+      y="1"
+      width="0.1"
+      fill="red"
+    />
+
+    <rect [attr.y]="1 - 0.0125" height="0.025" width="0.1" fill="#e5e5e5" />
   </svg>
-</div>
 
-<button class="pause-button" (click)="this.sim.stop()">X</button>
+  <div class="bottom-center">
+    <div class="speed">{{ speed | number: "1.2-2" }} m/s</div>
+    <svg
+      viewBox="0 0 1.02 0.1"
+      class="yaw"
+      appTouchAxis="x"
+      (axisMove)="yawMove($event)"
+      (axisEnd)="this.sim.keyboardController.yawOverride = false"
+    >
+      <rect [attr.x]="0.5 + yaw / 2" width="0.02" height="0.1" fill="#e5e5e5" />
+    </svg>
+  </div>
 
-<div class="help-hover">
-  <a class="help-button">?</a>
-  <div class="help-tooltip">
-    <h3>Desktop:</h3>
-    <table>
-      <tr>
-        <td>Throttle Plus</td>
-        <td>W</td>
-      </tr>
-      <tr>
-        <td>Throttle Minus</td>
-        <td>S</td>
-      </tr>
-      <tr>
-        <td>Yaw Left</td>
-        <td>A</td>
-      </tr>
-      <tr>
-        <td>Yaw Right</td>
-        <td>D</td>
-      </tr>
-      <tr>
-        <td>Restart</td>
-        <td>R</td>
-      </tr>
-      <tr>
-        <td>Pause</td>
-        <td>Esc</td>
-      </tr>
-    </table>
-    <h3>Mobile:</h3>
-    <div>
-      Slide over the throttle <br />
-      and yaw sliders.
+  <button class="pause-button" (click)="this.sim.stop()">X</button>
+
+  <div class="help-hover">
+    <a class="help-button">?</a>
+    <div class="help-tooltip">
+      <h3>Desktop:</h3>
+      <table>
+        <tr>
+          <td>Throttle Plus</td>
+          <td>W</td>
+        </tr>
+        <tr>
+          <td>Throttle Minus</td>
+          <td>S</td>
+        </tr>
+        <tr>
+          <td>Yaw Left</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>Yaw Right</td>
+          <td>D</td>
+        </tr>
+        <tr>
+          <td>Restart</td>
+          <td>R</td>
+        </tr>
+        <tr>
+          <td>Pause</td>
+          <td>Esc</td>
+        </tr>
+        <tr>
+          <td>Camera</td>
+          <td>Arrows</td>
+        </tr>
+      </table>
+      <h3>Mobile:</h3>
+      <div>
+        Slide over the throttle <br />
+        and yaw sliders. Swipe <br />
+        to move the camera.
+      </div>
     </div>
   </div>
 </div>

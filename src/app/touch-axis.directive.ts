@@ -26,6 +26,7 @@ export class TouchAxisDirective {
   @HostListener('touchmove', ['$event'])
   touchStart(event: TouchEvent) {
     event.preventDefault();
+    event.stopPropagation();
 
     const filteredTouches = [...event.touches].filter((t) =>
       this.nativeElement.contains(t.target as Element),
@@ -47,6 +48,8 @@ export class TouchAxisDirective {
   @HostListener('touchcancel', ['$event'])
   touchEnd(event: TouchEvent) {
     event.preventDefault();
+    event.stopPropagation();
+
     this.axisEnd.emit();
   }
 }

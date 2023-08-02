@@ -1,6 +1,8 @@
 export class InputController {
   public throttleOverride = false;
   public yawOverride = false;
+  public cameraOverride = false;
+  public cameraOverrideAngle = 0;
 
   public keyMap = {
     KeyW: 'throttleUp',
@@ -68,6 +70,8 @@ export class InputController {
   }
 
   public getCameraDirection(): number {
+    if (this.cameraOverride) return this.cameraOverrideAngle;
+
     // Couldn't figure out a better way to do it
     if (this.keyState.lookFront && this.keyState.lookLeft) return -Math.PI / 4;
     if (this.keyState.lookFront && this.keyState.lookRight) return Math.PI / 4;

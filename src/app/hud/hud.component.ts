@@ -30,4 +30,9 @@ export class HudComponent {
     this.sim.keyboardController.yawOverride = true;
     this.sim.keyboardController.axisValues.yaw = ratio * 2 - 1;
   }
+
+  cameraMove(angle: number) {
+    this.sim.keyboardController.cameraOverride = true;
+    this.sim.keyboardController.cameraOverrideAngle = angle;
+  }
 }
