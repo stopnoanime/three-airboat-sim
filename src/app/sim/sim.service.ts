@@ -79,6 +79,7 @@ export class SimService {
       antialias: true,
       canvas: canvas,
     });
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
