@@ -10,6 +10,7 @@ import noise_3d from './noise_3d';
 import { Water } from './Water';
 import { Howl } from 'howler';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import Stats from 'three/examples/jsm/libs/stats.module';
 
 @Injectable({
   providedIn: 'root',
@@ -33,6 +34,8 @@ export class SimService {
   private dirLight: THREE.DirectionalLight;
   private world: PLANCK.World;
   private sound: Howl;
+
+  private stats?: Stats;
 
   constructor() {
     (THREE.ShaderChunk as any).noise_3d = noise_3d;
@@ -190,6 +193,7 @@ export class SimService {
     this.water.updateTime(currentTime);
 
     this.renderer.render(this.scene, this.camera);
+    this.stats?.update();
 
     if (this.playing)
       requestAnimationFrame((t) => this.gameLoop(t / 1000, currentTime));
@@ -289,5 +293,8 @@ export class SimService {
       .onChange((v) => (this.water.material.uniforms['noiseSize'].value = v));
 
     this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
+
+    this.stats = new Stats();
+    document.body.appendChild(this.stats.dom);
   }
 }
