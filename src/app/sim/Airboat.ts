@@ -416,10 +416,10 @@ const wakeFragmentShader = `
 
     void main() {
         float noise = 0.5 + snoise(vec3(vUv.x*6.0, vUv.y*2.0, time*3.0))/2.0;
-        float chance = sin(vUv.y * 3.1415) * sin(vUv.x * 3.1415);
+        float chance = sin(vUv.y * 3.1415) * sin(vUv.x * 3.1415) * throttle;
         bool transparent = noise > chance;
 
-        gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : throttle);
+        gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : 1.0);
     }
 `;
 
