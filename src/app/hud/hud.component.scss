@@ -48,29 +48,47 @@
   padding-right: 8px;
 }
 
-.help-hover {
-  display: inline-block;
-  margin: 4px;
-}
-
-.help-button {
+.help-button,
+.pause-button {
   height: 32px;
   width: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
-
+  cursor: pointer;
+  border: none;
   background-color: black;
   border-radius: 100%;
   opacity: 70%;
 }
 
+.help-button {
+  float: right;
+  margin-bottom: 4px;
+}
+
+.pause-button {
+  margin: 4px;
+}
+
+.help-hover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 4px;
+
+  &:hover .help-tooltip {
+    display: block;
+  }
+}
+
 .help-tooltip {
+  clear: right;
+
   display: none;
   background-color: black;
   border-radius: 4px;
   opacity: 70%;
-  margin-top: 4px;
   font-size: 14px;
   padding: 4px;
 
@@ -81,8 +99,4 @@
   div {
     margin-left: 4px;
   }
-}
-
-.help-hover:hover .help-tooltip {
-  display: inline-block;
 }
