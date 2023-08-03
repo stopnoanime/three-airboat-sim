@@ -82,7 +82,7 @@ export class SimService {
       antialias: true,
       canvas: canvas,
     });
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -90,12 +90,7 @@ export class SimService {
     const loader = new THREE.FileLoader();
     const textureLoader = new THREE.TextureLoader();
 
-    const waterHeightMap = textureLoader.loadAsync(
-      environment.waterHeightMapUrl,
-    );
-    const terrainHeightMap = textureLoader.loadAsync(
-      environment.terrainHeightMapUrl,
-    );
+    const heightMap = textureLoader.loadAsync(environment.heightMapUrl);
     const mapSvg = loader
       .setResponseType('document')
       .setMimeType('text/html' as any)
@@ -106,19 +101,15 @@ export class SimService {
         .then((g) => [m, g] as [string, GLTF]),
     );
 
-    this.scenery = new Scenery(
-      this.world,
-      await mapSvg,
-      await terrainHeightMap,
-    );
+    this.scenery = new Scenery(this.world, await mapSvg, await heightMap);
     this.scenery.placeMeshes(
       await mapSvg,
-      await terrainHeightMap,
+      await heightMap,
       new Map(await Promise.all(meshPromises)),
     );
     this.scene.add(this.scenery);
 
-    this.water = new Water(await waterHeightMap);
+    this.water = new Water(await heightMap);
     this.scene.add(this.water);
 
     if (environment.DEBUG) this.initDebugGui();
@@ -245,6 +236,16 @@ export class SimService {
       );
 
     const sceneryFolder = gui.addFolder('Scenery');
+    sceneryFolder
+      .add(this.scenery, 'heightMapOffset', 0, 1)
+      .onChange(
+        (v) => (this.scenery.material.uniforms['heightMapOffset'].value = v),
+      );
+    sceneryFolder
+      .add(this.scenery, 'grassHeight', 0, 1)
+      .onChange(
+        (v) => (this.scenery.material.uniforms['grassHeight'].value = v),
+      );
     sceneryFolder
       .addColor(this.scenery, 'sandColor')
       .onChange((v) =>

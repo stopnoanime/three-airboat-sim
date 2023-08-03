@@ -1,7 +1,6 @@
 export const config = {
   mapSvgUrl: 'assets/map.svg',
-  terrainHeightMapUrl: 'assets/terrain.png',
-  waterHeightMapUrl: 'assets/water.png',
+  heightMapUrl: 'assets/heightMap.png',
   meshes: [
     'bush_1',
     'bush_2',

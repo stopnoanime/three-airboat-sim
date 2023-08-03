@@ -5,6 +5,8 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 export class Scenery extends THREE.Mesh {
   public sandColor = 0xf2d2a9;
   public grassColor = 0x009a17;
+  public heightMapOffset = 0.59;
+  public grassHeight = 0.73;
 
   override material: THREE.ShaderMaterial;
 
@@ -25,6 +27,8 @@ export class Scenery extends THREE.Mesh {
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         heightMap: { value: heightMap },
+        heightMapOffset: { value: this.heightMapOffset },
+        grassHeight: { value: this.grassHeight },
         sandColor: { value: new THREE.Color(this.sandColor) },
         grassColor: { value: new THREE.Color(this.grassColor) },
       },
@@ -35,8 +39,8 @@ export class Scenery extends THREE.Mesh {
     this.geometry = new THREE.PlaneGeometry(
       mapSize,
       mapSize,
-      mapSize * 10,
-      mapSize * 10,
+      mapSize,
+      mapSize,
     ).rotateX(-Math.PI / 2);
 
     // PLANCK
@@ -91,7 +95,8 @@ export class Scenery extends THREE.Mesh {
       const imageIdx =
         Math.round(element.y * imageData.height) * imageData.width +
         Math.round(element.x * imageData.width);
-      const posY = imageData.data[imageIdx * 4] / 255 - 0.2;
+      const posY =
+        imageData.data[imageIdx * 4] / 255 - this.heightMapOffset - 0.05;
 
       const matrix = new THREE.Matrix4().compose(
         new THREE.Vector3(posX, posY, posZ),
@@ -147,13 +152,14 @@ export class Scenery extends THREE.Mesh {
 
 const terrainVertexShader = `
     uniform sampler2D heightMap;
+    uniform float heightMapOffset;
 
     varying float vertexHeight;
 
     void main() {
         vertexHeight = texture2D(heightMap, uv).r;
 
-        vec3 newPosition = position + normal * vertexHeight - 0.15;
+        vec3 newPosition = position + normal * vertexHeight - heightMapOffset;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
 `;
@@ -161,12 +167,13 @@ const terrainVertexShader = `
 const terrainFragmentShader = `
     uniform vec3 sandColor;
     uniform vec3 grassColor;
+    uniform float grassHeight;
 
     varying float vertexHeight;
 
     void main() {
-        vec3 sand = (1.0 - smoothstep(0.3, 0.4, vertexHeight)) * sandColor;
-        vec3 grass = smoothstep(0.3, 0.4, vertexHeight) * grassColor;
+        vec3 sand = (1.0 - smoothstep(grassHeight, grassHeight + 0.2, vertexHeight)) * sandColor;
+        vec3 grass = smoothstep(grassHeight, grassHeight + 0.2, vertexHeight) * grassColor;
 
         gl_FragColor = vec4(sand + grass, 1.0);
     }
