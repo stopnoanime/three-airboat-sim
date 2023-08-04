@@ -4,7 +4,7 @@ export class Water extends THREE.Mesh {
   public waterColorDeep = 0x5aaeba;
   public waterColorShallow = 0x13cfd2;
   public surfaceNoiseCutoff = 0.03;
-  public edgeFoamCutoffMin = 0.15;
+  public edgeFoamCutoffMin = 0.25;
   public edgeFoamCutoffMax = 0.6;
   public noiseSpeed = 0.1;
   public noiseSize = 50;
@@ -14,9 +14,12 @@ export class Water extends THREE.Mesh {
   constructor(heightMap: THREE.Texture, size = 100) {
     super();
 
-    this.geometry = new THREE.PlaneGeometry(size, size, size, size).rotateX(
-      -Math.PI / 2,
-    );
+    this.geometry = new THREE.PlaneGeometry(
+      size,
+      size,
+      size - 1,
+      size - 1,
+    ).rotateX(-Math.PI / 2);
 
     this.material = new THREE.ShaderMaterial({
       uniforms: THREE.UniformsUtils.merge([

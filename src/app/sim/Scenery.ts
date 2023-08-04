@@ -5,23 +5,23 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 export class Scenery extends THREE.Mesh {
   public sandColor = 0xf2d2a9;
   public grassColor = 0x009a17;
-  public heightMapOffset = 0.59;
-  public grassHeight = 0.73;
+  public heightMapOffset = 0.5;
+  public grassHeight = 0.6;
 
   override material: THREE.ShaderMaterial;
 
   private body: PLANCK.Body;
-  private mapSize: number;
+  private size: number;
 
   constructor(
     world: PLANCK.World,
     mapSvg: Document,
     heightMap: THREE.Texture,
-    mapSize = 100,
+    size = 100,
   ) {
     super();
 
-    this.mapSize = mapSize;
+    this.size = size;
 
     // THREE
     this.material = new THREE.ShaderMaterial({
@@ -37,15 +37,15 @@ export class Scenery extends THREE.Mesh {
     });
 
     this.geometry = new THREE.PlaneGeometry(
-      mapSize,
-      mapSize,
-      mapSize,
-      mapSize,
+      size,
+      size,
+      size - 1,
+      size - 1,
     ).rotateX(-Math.PI / 2);
 
     // PLANCK
     this.body = world.createBody();
-    this.convertSvgPathsToMapWalls(mapSvg, mapSize).forEach((wall) =>
+    this.convertSvgPathsToMapWalls(mapSvg, size).forEach((wall) =>
       this.body.createFixture({
         shape: wall,
       }),
@@ -89,8 +89,8 @@ export class Scenery extends THREE.Mesh {
     const imageData = this.convertTextureToImageData(heightMap);
 
     for (const element of elements) {
-      const posX = (element.x - 1 / 2) * this.mapSize;
-      const posZ = (element.y - 1 / 2) * this.mapSize;
+      const posX = (element.x - 1 / 2) * this.size;
+      const posZ = (element.y - 1 / 2) * this.size;
 
       const imageIdx =
         Math.round(element.y * imageData.height) * imageData.width +
@@ -120,10 +120,7 @@ export class Scenery extends THREE.Mesh {
       for (let i = 0; i < segments; i++) {
         var pt = path.getPointAtLength((i * length) / segments);
         points.push(
-          PLANCK.Vec2(
-            (pt.x - 1 / 2) * this.mapSize,
-            (1 / 2 - pt.y) * this.mapSize,
-          ),
+          PLANCK.Vec2((pt.x - 1 / 2) * this.size, (1 / 2 - pt.y) * this.size),
         );
       }
 
@@ -159,7 +156,7 @@ const terrainVertexShader = `
     void main() {
         vertexHeight = texture2D(heightMap, uv).r;
 
-        vec3 newPosition = position + normal * vertexHeight - heightMapOffset;
+        vec3 newPosition = position + normal * (vertexHeight - heightMapOffset);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
 `;
