@@ -131,7 +131,7 @@ export class Scenery extends THREE.Mesh {
   private convertTextureToImageData(texture: THREE.Texture) {
     const canvas = document.createElement('canvas');
     canvas.width = texture.image.width;
-    canvas.height = texture.image.width;
+    canvas.height = texture.image.height;
 
     const canvasContext = canvas.getContext('2d')!;
     canvasContext.drawImage(texture.image, 0, 0);
@@ -140,7 +140,7 @@ export class Scenery extends THREE.Mesh {
       0,
       0,
       texture.image.width,
-      texture.image.width,
+      texture.image.height,
     );
   }
 }
