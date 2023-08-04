@@ -46,4 +46,9 @@ export class AppComponent implements OnInit {
       this.sim.start();
     else this.sim.keyboardController.onKeyEvent(event);
   }
+
+  @HostListener('window:blur')
+  onBlur() {
+    this.sim.keyboardController.onBlur();
+  }
 }

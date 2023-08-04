@@ -31,17 +31,33 @@ export class InputController {
     lookFront: false,
   };
 
+  /**
+   * KeyboardEvent handler
+   * @param event The keyboard event
+   */
   public onKeyEvent(event: KeyboardEvent) {
-    if (!this.keyMap[event.code as keyof typeof this.keyMap]) return;
+    const mappedKey = this.keyMap[event.code as keyof typeof this.keyMap];
 
-    // lol
-    this.keyState[
-      this.keyMap[
-        event.code as keyof typeof this.keyMap
-      ] as keyof typeof this.keyState
-    ] = event.type == 'keydown';
+    if (!mappedKey) return;
+
+    this.keyState[mappedKey as keyof typeof this.keyState] =
+      event.type == 'keydown';
   }
 
+  /**
+   * Blur event handler, used to reset all key values when page loses focus (it doesn't receive keydown events then)
+   */
+  public onBlur() {
+    Object.keys(this.keyState).forEach(
+      (v) => (this.keyState[v as keyof typeof this.keyState] = false),
+    );
+  }
+
+  /**
+   * Calculates new axis values based on key states and change in time
+   * @param dt Delta time
+   * @returns The new axis values
+   */
   public stepAxisValues(dt: number) {
     if (!this.throttleOverride)
       this.axisValues.throttle = this.stepSingleAxis(
@@ -59,34 +75,33 @@ export class InputController {
         dt,
       );
 
-    this.axisValues.throttle = this.minMaxAndRound(
+    this.axisValues.throttle = this.clampAndRound(
       this.axisValues.throttle,
       -0.5,
       1,
     );
-    this.axisValues.yaw = this.minMaxAndRound(this.axisValues.yaw, -1, 1);
+    this.axisValues.yaw = this.clampAndRound(this.axisValues.yaw, -1, 1);
 
     return this.axisValues;
   }
 
+  /**
+   * Calculates camera angle based on key state
+   * @returns Camera angle
+   */
   public getCameraDirection(): number {
     if (this.cameraOverride) return this.cameraOverrideAngle;
 
-    // Couldn't figure out a better way to do it
-    if (this.keyState.lookFront && this.keyState.lookLeft) return -Math.PI / 4;
-    if (this.keyState.lookFront && this.keyState.lookRight) return Math.PI / 4;
-    if (this.keyState.lookFront) return 0;
+    let x = 0,
+      y = 0;
 
-    if (this.keyState.lookBack && this.keyState.lookLeft)
-      return (-Math.PI * 3) / 4;
-    if (this.keyState.lookBack && this.keyState.lookRight)
-      return (Math.PI * 3) / 4;
-    if (this.keyState.lookBack) return Math.PI;
+    if (this.keyState.lookRight) y++;
+    if (this.keyState.lookLeft) y--;
 
-    if (this.keyState.lookLeft) return (Math.PI * 3) / 2;
-    if (this.keyState.lookRight) return Math.PI / 2;
+    if (this.keyState.lookBack) x++;
+    if (this.keyState.lookFront) x--;
 
-    return 0;
+    return Math.atan2(y, x);
   }
 
   private stepSingleAxis(
@@ -108,7 +123,7 @@ export class InputController {
     return value;
   }
 
-  private minMaxAndRound(val: number, min: number, max: number) {
+  private clampAndRound(val: number, min: number, max: number) {
     return Math.round(Math.min(Math.max(val, min), max) * 100) / 100;
   }
 }
