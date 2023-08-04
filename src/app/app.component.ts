@@ -49,6 +49,12 @@ export class AppComponent implements OnInit {
 
   @HostListener('window:blur')
   onBlur() {
+    this.sim.stopMusic();
     this.sim.keyboardController.onBlur();
+  }
+
+  @HostListener('window:focus')
+  onFocus() {
+    this.sim.startMusic();
   }
 }

@@ -123,21 +123,30 @@ export class SimService {
   public start() {
     if (!this.loaded || this.playing) return;
 
-    this.sound.play();
-    this.airboat.sound.play();
-
     this.playing = true;
 
+    this.startMusic();
     this.startGameLoop();
   }
 
   public stop() {
     if (!this.loaded || !this.playing) return;
 
+    this.playing = false;
+
+    this.stopMusic();
+  }
+
+  public startMusic() {
+    if (!this.playing) return;
+
+    this.sound.play();
+    this.airboat.sound.play();
+  }
+
+  public stopMusic() {
     this.sound.stop();
     this.airboat.sound.stop();
-
-    this.playing = false;
   }
 
   public onResize() {

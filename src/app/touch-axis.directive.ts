@@ -18,22 +18,54 @@ export class TouchAxisDirective {
 
   private nativeElement: Element;
 
+  private touchId?: number;
+
   constructor(private el: ElementRef) {
     this.nativeElement = el.nativeElement;
   }
 
   @HostListener('touchstart', ['$event'])
-  @HostListener('touchmove', ['$event'])
   touchStart(event: TouchEvent) {
-    event.preventDefault();
     event.stopPropagation();
 
-    const filteredTouches = [...event.touches].filter((t) =>
-      this.nativeElement.contains(t.target as Element),
-    );
-    if (filteredTouches.length != 1) return;
+    if (this.touchId != undefined) return;
 
-    const touch = filteredTouches[0];
+    this.touchId = event.changedTouches[0].identifier;
+
+    this.calculateAxis(event);
+  }
+
+  @HostListener('touchmove', ['$event'])
+  touchMove(event: TouchEvent) {
+    event.stopPropagation();
+
+    if (event.cancelable) event.preventDefault();
+
+    this.calculateAxis(event);
+  }
+
+  @HostListener('touchend', ['$event'])
+  @HostListener('touchcancel', ['$event'])
+  touchEnd(event: TouchEvent) {
+    event.stopPropagation();
+
+    const touch = this.getTrackedTouch(event);
+    if (!touch) return;
+
+    this.touchId = undefined;
+    this.axisEnd.emit();
+  }
+
+  @HostListener('window:blur')
+  onBlur() {
+    this.touchId = undefined;
+    this.axisEnd.emit();
+  }
+
+  private calculateAxis(event: TouchEvent) {
+    const touch = this.getTrackedTouch(event);
+    if (!touch) return;
+
     const bb = this.nativeElement.getBoundingClientRect();
 
     const ratio =
@@ -44,12 +76,7 @@ export class TouchAxisDirective {
     this.axisMove.emit(Math.min(Math.max(ratio, 0), 1));
   }
 
-  @HostListener('touchend', ['$event'])
-  @HostListener('touchcancel', ['$event'])
-  touchEnd(event: TouchEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this.axisEnd.emit();
+  private getTrackedTouch(event: TouchEvent) {
+    return [...event.changedTouches].find((t) => t.identifier == this.touchId);
   }
 }

@@ -36,10 +36,10 @@ export class TouchCameraDirective {
 
   @HostListener('touchmove', ['$event'])
   touchMove(event: TouchEvent) {
+    if (event.cancelable) event.preventDefault();
+
     const touch = this.getTrackedTouch(event);
     if (!touch) return;
-
-    if (event.cancelable) event.preventDefault();
 
     const offsetX = touch.clientX - this.startX;
     const offsetY = touch.clientY - this.startY;
@@ -61,6 +61,12 @@ export class TouchCameraDirective {
     const touch = this.getTrackedTouch(event);
     if (!touch) return;
 
+    this.touchId = undefined;
+    this.cameraEnd.emit();
+  }
+
+  @HostListener('window:blur')
+  onBlur() {
     this.touchId = undefined;
     this.cameraEnd.emit();
   }
