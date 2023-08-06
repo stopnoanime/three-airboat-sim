@@ -7,6 +7,16 @@ import {
   Output,
 } from '@angular/core';
 
+/**
+ * Directive that adds slider touch controls to an element.
+ *
+ * Inputs:
+ * - appTouchAxis - 'x' or 'y' - specifies the axis direction, x for horizontal, y for vertical
+ *
+ * Outputs:
+ * - axisMove - emits number in [0, 1] range corresponding to relative touch position in element in axis direction
+ * - axisEnd - emits on touch end
+ */
 @Directive({
   selector: '[appTouchAxis]',
 })

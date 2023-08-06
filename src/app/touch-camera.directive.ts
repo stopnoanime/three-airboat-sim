@@ -3,10 +3,18 @@ import {
   ElementRef,
   EventEmitter,
   HostListener,
-  Input,
   Output,
 } from '@angular/core';
 
+/**
+ * Directive that adds camera angle touch controls to an element.
+ * The touch start point sets the 'joystick' center, and by moving
+ * the touch point around this center the user can change the camera angle.
+ *
+ * Outputs:
+ * - cameraMove - emits camera angle in (-π, +π] range
+ * - cameraEnd - emits on touch end
+ */
 @Directive({
   selector: '[appTouchCamera]',
 })
