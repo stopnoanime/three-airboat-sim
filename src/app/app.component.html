@@ -2,10 +2,7 @@
   <!-- renderer canvas -->
   <canvas #canvas></canvas>
 
-  <app-loading-screen
-    *ngIf="!sim.loaded"
-    [loadingProgress]="sim.loadingProgress"
-  ></app-loading-screen>
+  <app-loading-screen *ngIf="!sim.loaded"></app-loading-screen>
 
   <app-pause-screen *ngIf="sim.loaded && !sim.playing"></app-pause-screen>
 

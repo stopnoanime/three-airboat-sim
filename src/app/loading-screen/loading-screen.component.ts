@@ -1,5 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, HostBinding, Input } from '@angular/core';
+import { SimService } from '../sim/sim.service';
 
 @Component({
   selector: 'app-loading-screen',
@@ -14,6 +15,5 @@ import { Component, HostBinding, Input } from '@angular/core';
 export class LoadingScreenComponent {
   @HostBinding('@leaveAnimation') leaveAnimation = true;
 
-  @Input()
-  loadingProgress = 0;
+  constructor(public sim: SimService) {}
 }

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { TouchCameraDirective } from './touch-camera.directive';
 import { By } from '@angular/platform-browser';
+import { dispatchTouchEvent } from './testHelpers';
 
 @Component({
   template: `
@@ -40,10 +41,10 @@ describe('TouchCameraDirective', () => {
   });
 
   it('should emit cameraMove events', () => {
-    dispatchTouchEvent('touchstart', 50, 50);
+    dispatchTouchEvent(div, 'touchstart', 50, 50);
 
     const assertAngle = (x: number, y: number, angle: number) => {
-      dispatchTouchEvent('touchmove', x, y);
+      dispatchTouchEvent(div, 'touchmove', x, y);
       expect(component.cameraMove).toBe(angle);
     };
 
@@ -58,35 +59,20 @@ describe('TouchCameraDirective', () => {
   });
 
   it('should emit cameraEnd event', () => {
-    dispatchTouchEvent('touchstart', 0, 0);
-    dispatchTouchEvent('touchend', 0, 0);
+    dispatchTouchEvent(div, 'touchstart', 0, 0);
+    dispatchTouchEvent(div, 'touchend', 0, 0);
 
     expect(component.cameraEnd).toBeTrue();
   });
 
   it('should ignore events from different touches', () => {
-    dispatchTouchEvent('touchstart', 50, 50, 0);
+    dispatchTouchEvent(div, 'touchstart', 50, 50, 0);
 
-    dispatchTouchEvent('touchstart', 50, 50, 1);
-    dispatchTouchEvent('touchmove', 0, 0, 1);
-    dispatchTouchEvent('touchend', 50, 50, 1);
+    dispatchTouchEvent(div, 'touchstart', 50, 50, 1);
+    dispatchTouchEvent(div, 'touchmove', 0, 0, 1);
+    dispatchTouchEvent(div, 'touchend', 50, 50, 1);
 
     expect(component.cameraMove).toBeUndefined();
     expect(component.cameraEnd).toBeFalse();
   });
-
-  function dispatchTouchEvent(type: string, x: number, y: number, id = 0) {
-    div.dispatchEvent(
-      new TouchEvent(type, {
-        changedTouches: [
-          new Touch({
-            clientX: x,
-            clientY: y,
-            identifier: id,
-            target: div,
-          }),
-        ],
-      }),
-    );
-  }
 });

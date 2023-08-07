@@ -44,13 +44,13 @@ export class AppComponent implements OnInit {
       event.type == 'keydown'
     )
       this.sim.start();
-    else this.sim.keyboardController.onKeyEvent(event);
+    else this.sim.inputController.onKeyEvent(event);
   }
 
   @HostListener('window:blur')
   onBlur() {
     this.sim.stopMusic();
-    this.sim.keyboardController.onBlur();
+    this.sim.inputController.onBlur();
   }
 
   @HostListener('window:focus')

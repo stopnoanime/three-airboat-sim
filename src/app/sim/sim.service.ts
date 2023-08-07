@@ -21,7 +21,7 @@ export class SimService {
   public loadingProgress = 0;
 
   public airboat: Airboat;
-  public keyboardController: InputController;
+  public inputController: InputController;
 
   public backgroundColor = 0xbae6fd;
 
@@ -63,7 +63,7 @@ export class SimService {
     this.dirLight.target = this.airboat;
     this.scene.add(this.airboat);
 
-    this.keyboardController = new InputController();
+    this.inputController = new InputController();
 
     this.sound = new Howl({
       src: ['assets/bg.mp3'],
@@ -173,7 +173,7 @@ export class SimService {
   private gameLoop(currentTime: number, previousTime: number) {
     let frameTime = Math.min(currentTime - previousTime, 1 / 20);
 
-    const axisValues = this.keyboardController.stepAxisValues(frameTime);
+    const axisValues = this.inputController.stepAxisValues(frameTime);
 
     this.airboat.calculateForces(axisValues);
     this.world.step(frameTime);
@@ -184,7 +184,7 @@ export class SimService {
     this.airboat.updateTime(currentTime);
     this.airboat.updateCamera(
       this.camera,
-      this.keyboardController.getCameraDirection(),
+      this.inputController.getCameraDirection(),
     );
 
     this.dirLight.position.copy(

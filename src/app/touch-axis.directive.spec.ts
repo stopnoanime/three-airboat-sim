@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { TouchAxisDirective } from './touch-axis.directive';
 import { By } from '@angular/platform-browser';
+import { dispatchTouchEvent } from './testHelpers';
 
 @Component({
   template: `
@@ -43,13 +44,13 @@ describe('TouchAxisDirective', () => {
   it('should emit axisMove events for x axis', () => {
     expect(component.axis).toBe('x');
 
-    dispatchTouchEvent('touchstart', 0, 0);
+    dispatchTouchEvent(div, 'touchstart', 0, 0);
     expect(component.axisMove).toBe(0);
 
-    dispatchTouchEvent('touchmove', 50, 0);
+    dispatchTouchEvent(div, 'touchmove', 50, 0);
     expect(component.axisMove).toBe(0.5);
 
-    dispatchTouchEvent('touchmove', 100, 0);
+    dispatchTouchEvent(div, 'touchmove', 100, 0);
     expect(component.axisMove).toBe(1);
   });
 
@@ -57,40 +58,25 @@ describe('TouchAxisDirective', () => {
     component.axis = 'y';
     fixture.detectChanges();
 
-    dispatchTouchEvent('touchstart', 0, 50);
+    dispatchTouchEvent(div, 'touchstart', 0, 50);
     expect(component.axisMove).toBe(0.5);
   });
 
   it('should emit axisEnd event', () => {
-    dispatchTouchEvent('touchstart', 0, 0);
-    dispatchTouchEvent('touchend', 0, 0);
+    dispatchTouchEvent(div, 'touchstart', 0, 0);
+    dispatchTouchEvent(div, 'touchend', 0, 0);
 
     expect(component.axisEnd).toBeTrue();
   });
 
   it('should ignore events from different touches', () => {
-    dispatchTouchEvent('touchstart', 0, 0, 0);
+    dispatchTouchEvent(div, 'touchstart', 0, 0, 0);
 
-    dispatchTouchEvent('touchstart', 50, 0, 1);
-    dispatchTouchEvent('touchmove', 50, 0, 1);
-    dispatchTouchEvent('touchend', 50, 0, 1);
+    dispatchTouchEvent(div, 'touchstart', 50, 0, 1);
+    dispatchTouchEvent(div, 'touchmove', 50, 0, 1);
+    dispatchTouchEvent(div, 'touchend', 50, 0, 1);
 
     expect(component.axisMove).toBe(0);
     expect(component.axisEnd).toBeFalse();
   });
-
-  function dispatchTouchEvent(type: string, x: number, y: number, id = 0) {
-    div.dispatchEvent(
-      new TouchEvent(type, {
-        changedTouches: [
-          new Touch({
-            pageX: x,
-            pageY: y,
-            identifier: id,
-            target: div,
-          }),
-        ],
-      }),
-    );
-  }
 });

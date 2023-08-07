@@ -8,11 +8,11 @@ import { SimService } from '../sim/sim.service';
 })
 export class HudComponent {
   get throttle() {
-    return this.sim.keyboardController.axisValues.throttle;
+    return this.sim.inputController.axisValues.throttle;
   }
 
   get yaw() {
-    return this.sim.keyboardController.axisValues.yaw;
+    return this.sim.inputController.axisValues.yaw;
   }
 
   get speed() {
@@ -22,17 +22,17 @@ export class HudComponent {
   constructor(public sim: SimService) {}
 
   throttleMove(ratio: number) {
-    this.sim.keyboardController.throttleOverride = true;
-    this.sim.keyboardController.axisValues.throttle = (1 - ratio) * 1.5 - 0.5;
+    this.sim.inputController.throttleOverride = true;
+    this.sim.inputController.axisValues.throttle = (1 - ratio) * 1.5 - 0.5;
   }
 
   yawMove(ratio: number) {
-    this.sim.keyboardController.yawOverride = true;
-    this.sim.keyboardController.axisValues.yaw = ratio * 2 - 1;
+    this.sim.inputController.yawOverride = true;
+    this.sim.inputController.axisValues.yaw = ratio * 2 - 1;
   }
 
   cameraMove(angle: number) {
-    this.sim.keyboardController.cameraOverride = true;
-    this.sim.keyboardController.cameraOverrideAngle = angle;
+    this.sim.inputController.cameraOverride = true;
+    this.sim.inputController.cameraOverrideAngle = angle;
   }
 }

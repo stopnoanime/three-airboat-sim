@@ -2,20 +2,21 @@
   class="touch"
   appTouchCamera
   (cameraMove)="cameraMove($event)"
-  (cameraEnd)="sim.keyboardController.cameraOverride = false"
+  (cameraEnd)="sim.inputController.cameraOverride = false"
 >
   <svg
     viewBox="0 0 0.1 1.5"
     class="throttle"
     appTouchAxis="y"
     (axisMove)="throttleMove($event)"
-    (axisEnd)="this.sim.keyboardController.throttleOverride = false"
+    (axisEnd)="this.sim.inputController.throttleOverride = false"
   >
     <rect
       [attr.height]="throttle > 0 ? throttle : 0"
       [attr.y]="1 - throttle"
       width="0.1"
       fill="green"
+      test-id="throttle-pos"
     />
 
     <rect
@@ -23,6 +24,7 @@
       y="1"
       width="0.1"
       fill="red"
+      test-id="throttle-neg"
     />
 
     <rect [attr.y]="1 - 0.0125" height="0.025" width="0.1" fill="#e5e5e5" />
@@ -35,7 +37,7 @@
       class="yaw"
       appTouchAxis="x"
       (axisMove)="yawMove($event)"
-      (axisEnd)="this.sim.keyboardController.yawOverride = false"
+      (axisEnd)="this.sim.inputController.yawOverride = false"
     >
       <rect [attr.x]="0.5 + yaw / 2" width="0.02" height="0.1" fill="#e5e5e5" />
     </svg>
