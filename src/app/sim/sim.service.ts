@@ -68,7 +68,6 @@ export class SimService {
     this.sound = new Howl({
       src: ['assets/bg.mp3'],
       loop: true,
-      volume: 0.5,
     });
 
     THREE.DefaultLoadingManager.onProgress = (_, l, t) =>
