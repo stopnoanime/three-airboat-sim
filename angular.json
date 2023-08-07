@@ -74,6 +74,14 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "prodConfig": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
             }
           },
           "defaultConfiguration": "production"
@@ -86,6 +94,9 @@
             },
             "development": {
               "browserTarget": "three-airboat-sim:build:development"
+            },
+            "prodConfig": {
+              "browserTarget": "three-airboat-sim:build:prodConfig"
             }
           },
           "defaultConfiguration": "development"
@@ -117,8 +128,38 @@
         },
         "deploy": {
           "builder": "angular-cli-ghpages:deploy"
+        },
+        "cypress-run": {
+          "builder": "@cypress/schematic:cypress",
+          "options": {
+            "devServerTarget": "three-airboat-sim:serve:prodConfig"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "three-airboat-sim:serve:prodConfig"
+            }
+          }
+        },
+        "e2e": {
+          "builder": "@cypress/schematic:cypress",
+          "options": {
+            "devServerTarget": "three-airboat-sim:serve:prodConfig",
+            "watch": true,
+            "headless": false
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "three-airboat-sim:serve:prodConfig"
+            }
+          }
         }
       }
     }
+  },
+  "cli": {
+    "schematicCollections": [
+      "@cypress/schematic",
+      "@schematics/angular"
+    ]
   }
 }
