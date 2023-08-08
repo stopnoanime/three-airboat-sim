@@ -10,8 +10,9 @@ export class Scenery extends THREE.Mesh {
 
   override material: THREE.ShaderMaterial;
 
+  public size: number;
+
   private body: PLANCK.Body;
-  private size: number;
 
   constructor(
     world: PLANCK.World,
@@ -45,7 +46,7 @@ export class Scenery extends THREE.Mesh {
 
     // PLANCK
     this.body = world.createBody();
-    this.convertSvgPathsToMapWalls(mapSvg, size).forEach((wall) =>
+    this.convertSvgPathsToMapWalls(mapSvg).forEach((wall) =>
       this.body.createFixture({
         shape: wall,
       }),
@@ -80,6 +81,8 @@ export class Scenery extends THREE.Mesh {
           count,
         );
         iMesh.userData['idx'] = 0;
+        iMesh.name = mesh.name;
+
         this.add(iMesh);
 
         return [element, iMesh];
@@ -93,8 +96,8 @@ export class Scenery extends THREE.Mesh {
       const posZ = (element.y - 1 / 2) * this.size;
 
       const imageIdx =
-        Math.round(element.y * imageData.height) * imageData.width +
-        Math.round(element.x * imageData.width);
+        Math.floor(element.y * imageData.height) * imageData.width +
+        Math.floor(element.x * imageData.width);
       const posY =
         imageData.data[imageIdx * 4] / 255 - this.heightMapOffset - 0.05;
 
@@ -112,7 +115,7 @@ export class Scenery extends THREE.Mesh {
     }
   }
 
-  private convertSvgPathsToMapWalls(svg: Document, segments = 250) {
+  private convertSvgPathsToMapWalls(svg: Document, segments = 200) {
     return [...svg.getElementsByTagName('path')].map((path) => {
       const points: PLANCK.Vec2[] = [];
       const length = path.getTotalLength();
