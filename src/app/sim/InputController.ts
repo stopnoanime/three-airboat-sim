@@ -1,10 +1,21 @@
+/**
+ * Takes keyboard and touch inputs and outputs
+ * throttle, yaw and camera angle values.
+ */
 export class InputController {
+  /** When true, throttle keyboard input is ignored. */
   public throttleOverride = false;
+
+  /** When true, yaw keyboard input is ignored. */
   public yawOverride = false;
+
+  /** When true, camera keyboard input is ignored. */
   public cameraOverride = false;
+  /** Camera angle to output when cameraOverride is set. */
   public cameraOverrideAngle = 0;
 
-  public keyMap = {
+  /** Maps keyboardEvent key codes to their function. */
+  public keyMap: Record<string, keyof typeof this.keyState> = {
     KeyW: 'throttleUp',
     KeyS: 'throttleDown',
     KeyA: 'yawLeft',
@@ -15,6 +26,12 @@ export class InputController {
     ArrowUp: 'lookFront',
   };
 
+  /**
+   * Yaw and throttle values.
+   * They are usually set automatically by the InputController,
+   * but when `throttleOverride` or `yawOverride` is set,
+   * you can set them and they won't be changed
+   */
   public axisValues: axisValues = {
     yaw: 0,
     throttle: 0,
@@ -40,8 +57,7 @@ export class InputController {
 
     if (!mappedKey) return;
 
-    this.keyState[mappedKey as keyof typeof this.keyState] =
-      event.type == 'keydown';
+    this.keyState[mappedKey] = event.type == 'keydown';
   }
 
   /**
@@ -87,7 +103,7 @@ export class InputController {
 
   /**
    * Calculates camera angle based on key state
-   * @returns Camera angle
+   * @returns Camera angle in (-π, +π] range
    */
   public getCameraDirection(): number {
     if (this.cameraOverride) return this.cameraOverrideAngle;

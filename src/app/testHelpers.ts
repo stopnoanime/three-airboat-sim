@@ -23,8 +23,12 @@ export function spyPropertySetter<T, K extends keyof T>(
   >;
 }
 
+export function keyEvent(code: string, type: 'keydown' | 'keyup' = 'keydown') {
+  return new KeyboardEvent(type, { code: code });
+}
+
 export function windowKeyEvent(key: string) {
-  const event = new KeyboardEvent('keydown', { code: key });
+  const event = keyEvent(key);
   window.dispatchEvent(event);
   return event;
 }
