@@ -44,9 +44,7 @@ export class SimService {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(this.backgroundColor);
 
-    this.world = new PLANCK.World({
-      gravity: new PLANCK.Vec2(0, 0),
-    });
+    this.world = new PLANCK.World();
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 

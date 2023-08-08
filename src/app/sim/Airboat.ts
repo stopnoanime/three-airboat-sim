@@ -5,8 +5,10 @@ import { axisValues } from './InputController';
 import { environment } from 'src/environments/environment';
 
 export class Airboat extends THREE.Object3D {
+  /** Airboat's physical body */
   public body: PLANCK.Body;
 
+  /** Airboat's prop sound */
   public sound: Howl;
 
   public settings = {
@@ -17,6 +19,7 @@ export class Airboat extends THREE.Object3D {
     frontalDrag: 0.2,
     thrust: 3,
     baseCameraDistance: 1,
+    cameraDistanceVerticalScale: 0.6,
     cameraDistanceVelocityScale: 0.2,
     yPosition: 0.04,
     mainColor: 0xef4444,
@@ -37,19 +40,24 @@ export class Airboat extends THREE.Object3D {
   public foamMaterial: THREE.ShaderMaterial;
 
   private hull: THREE.Mesh;
-  private propeller: THREE.Mesh;
-  private rudder: THREE.Mesh;
   private engine: THREE.Mesh;
   private propMount: THREE.Mesh;
   private wake: THREE.Mesh;
   private foam: THREE.Points;
+  public propeller: THREE.Mesh;
+  public rudder: THREE.Mesh;
 
   private debugArrow?: THREE.ArrowHelper;
 
+  /** Airboat's linear speed */
   public get speed() {
     return this.body.getLinearVelocity().length();
   }
 
+  /**
+   * Menages airboat physics (Planck.js) and visuals (Three.js)
+   * @param world The Planck world to add the airboat to
+   */
   constructor(world: PLANCK.World) {
     //THREE
     super();
@@ -184,21 +192,16 @@ export class Airboat extends THREE.Object3D {
     this.wake.receiveShadow = true;
 
     //assemble airboat
-    this.hull.position.set(-0.2, 0, -0.11);
+    this.hull.position.set(-0.2, this.settings.yPosition, -0.11);
     this.rudder.position.set(0, 0.07, 0.11);
     this.propeller.position.set(0.054, 0.1, 0.11);
     this.engine.position.set(0.035, 0.1, 0.11);
     this.propMount.position.set(0, 0, 0.11);
-    this.wake.position.set(
-      -0.2 - this.settings.wakeLength / 2,
-      -this.settings.yPosition,
-      0,
-    );
-    this.foam.position.set(-0.2, -this.settings.yPosition, 0);
+    this.wake.position.set(-0.2 - this.settings.wakeLength / 2, 0, 0);
+    this.foam.position.set(-0.2, 0, 0);
 
     this.hull.add(this.propeller, this.rudder, this.engine, this.propMount);
     this.add(this.hull, this.wake, this.foam);
-    this.position.setY(this.settings.yPosition);
 
     if (environment.DEBUG) {
       this.debugArrow = new THREE.ArrowHelper();
@@ -231,6 +234,11 @@ export class Airboat extends THREE.Object3D {
     });
   }
 
+  /**
+   * Positions camera around the airboat
+   * @param camera Three camera instance
+   * @param angle The camera angle
+   */
   public updateCamera(camera: THREE.PerspectiveCamera, angle: number) {
     const cameraDistance = Math.max(
       this.settings.baseCameraDistance,
@@ -240,7 +248,7 @@ export class Airboat extends THREE.Object3D {
     );
     const cameraOffset = new THREE.Vector3(
       -cameraDistance,
-      cameraDistance * 0.6,
+      cameraDistance * this.settings.cameraDistanceVerticalScale,
       0,
     ).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
 
@@ -250,6 +258,10 @@ export class Airboat extends THREE.Object3D {
     camera.lookAt(this.position);
   }
 
+  /**
+   * Calculates forces acting on the airboat
+   * @param axisValues The throttle and yaw values
+   */
   public calculateForces(axisValues: axisValues) {
     const force = new PLANCK.Vec2();
 
@@ -279,11 +291,14 @@ export class Airboat extends THREE.Object3D {
     this.applySway(force);
   }
 
+  /**
+   * Synchronizes visual Mesh with physical Body, needs to be called after physics step.
+   */
   public syncBodyAndMesh() {
     const pos = this.body.getPosition();
 
     //Planck and Three Y/Z axis is flipped
-    this.position.set(pos.x, this.settings.yPosition, -pos.y);
+    this.position.set(pos.x, 0, -pos.y);
     this.rotation.set(0, this.body.getAngle(), 0);
 
     //Pass data to shaders
@@ -301,6 +316,9 @@ export class Airboat extends THREE.Object3D {
     }
   }
 
+  /**
+   * Reset airboat position and velocity
+   */
   public reset() {
     this.body.setPosition(PLANCK.Vec2());
     this.body.setAngle(0);
@@ -308,17 +326,29 @@ export class Airboat extends THREE.Object3D {
     this.body.setAngularVelocity(0);
   }
 
+  /**
+   * Updates time. Used for animations in shaders
+   * @param t time in seconds
+   */
   public updateTime(t: number) {
     this.wakeMaterial.uniforms['time'].value = t;
     this.foamMaterial.uniforms['time'].value = t;
   }
 
+  /**
+   * Updates prop and rudder visuals
+   * @param axisValues The throttle and yaw values
+   */
   public updateControlSurfaces(axisValues: axisValues) {
     this.propeller.rotateX(axisValues.throttle);
     this.rudder.rotation.set(0, (axisValues.yaw * Math.PI) / 4, 0);
     this.wakeMaterial.uniforms['throttle'].value = axisValues.throttle;
   }
 
+  /**
+   * Updates prop sound volume
+   * @param axisValues The throttle and yaw values
+   */
   public updateSound(axisValues: axisValues) {
     this.sound.volume(Math.abs(axisValues.throttle));
   }
@@ -384,88 +414,88 @@ export class Airboat extends THREE.Object3D {
 }
 
 const wakeVertexShader = `
-    #include <common>
-    #include <shadowmap_pars_vertex>
-    
-    varying vec2 vUv;
+  #include <common>
+  #include <shadowmap_pars_vertex>
+  
+  varying vec2 vUv;
 
-    void main() {
-        #include <begin_vertex>
-        #include <beginnormal_vertex>
-        #include <project_vertex>
-        #include <worldpos_vertex>
-        #include <defaultnormal_vertex> 
-        #include <shadowmap_vertex>
+  void main() {
+    #include <begin_vertex>
+    #include <beginnormal_vertex>
+    #include <project_vertex>
+    #include <worldpos_vertex>
+    #include <defaultnormal_vertex> 
+    #include <shadowmap_vertex>
 
-        vUv = uv;
-    }
+    vUv = uv;
+  }
 `;
 
 const wakeFragmentShader = `
-    #include <common>
-    #include <packing>
-    #include <lights_pars_begin>
-    #include <shadowmap_pars_fragment>
-    #include <shadowmask_pars_fragment>
-    #include <noise_3d>
+  #include <common>
+  #include <packing>
+  #include <lights_pars_begin>
+  #include <shadowmap_pars_fragment>
+  #include <shadowmask_pars_fragment>
+  #include <noise_3d>
 
-    uniform float time;
-    uniform float throttle;
+  uniform float time;
+  uniform float throttle;
 
-    varying vec2 vUv;
+  varying vec2 vUv;
 
-    void main() {
-        float noise = 0.5 + snoise(vec3(vUv.x*6.0, vUv.y*2.0, time*3.0))/2.0;
-        float chance = sin(vUv.y * 3.1415) * sin(vUv.x * 3.1415) * throttle;
-        bool transparent = noise > chance;
+  void main() {
+    float noise = 0.5 + snoise(vec3(vUv.x*6.0, vUv.y*2.0, time*3.0))/2.0;
+    float chance = sin(vUv.y * 3.1415) * sin(vUv.x * 3.1415) * throttle;
+    bool transparent = noise > chance;
 
-        gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : 1.0);
-    }
+    gl_FragColor = vec4( mix(vec3(1,1,1), vec3(0,0,0), (1.0 - getShadowMask() ) * 0.5), transparent ? 0.0 : 1.0);
+  }
 `;
 
 const foamVertexShader = `
-    uniform float time;
-    uniform float vel;
-    uniform float velAngle;
+  uniform float time;
+  uniform float vel;
+  uniform float velAngle;
 
-    attribute float jumpHeight;
-    attribute float jumpLength;
-    attribute float jumpSpeed;
-    attribute float jumpStop;
-    attribute float jumpAngleMod;
+  attribute float jumpHeight;
+  attribute float jumpLength;
+  attribute float jumpSpeed;
+  attribute float jumpStop;
+  attribute float jumpAngleMod;
 
-    varying float jumpProgress;
-    varying float jumpEnd;
+  varying float jumpProgress;
+  varying float jumpEnd;
 
-    void main() {
-        float x = mod(time * jumpSpeed, jumpLength);
+  void main() {
+    float x = mod(time * jumpSpeed, jumpLength);
 
-        jumpProgress = x / jumpLength;
-        jumpEnd = jumpStop;
+    jumpProgress = x / jumpLength;
+    jumpEnd = jumpStop;
 
-        float y = - jumpHeight * x * (x - jumpLength);
+    float y = - jumpHeight * x * (x - jumpLength);
 
-        float angle = velAngle + jumpAngleMod;
-        float realX = cos(angle) * -x;
-        float realZ = sin(angle) * x;
+    float angle = velAngle + jumpAngleMod;
+    float realX = cos(angle) * -x;
+    float realZ = sin(angle) * x;
 
-        vec3 offset = vec3(realX, y, realZ) * vel / 10.0;
+    vec3 offset = vec3(realX, y, realZ) * vel / 10.0;
 
-        gl_PointSize = 2.0;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position + offset, 1);
-    }
+    gl_PointSize = 2.0;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position + offset, 1);
+  }
 `;
 
 const foamFragmentShader = `
-    uniform vec3 color;
+  uniform vec3 color;
 
-    varying float jumpProgress;
-    varying float jumpEnd;
+  varying float jumpProgress;
+  varying float jumpEnd;
 
-    void main() {
-        if(jumpProgress >= jumpEnd) discard; 
+  void main() {
+    if(jumpProgress >= jumpEnd) discard; 
 
-        float opacity = (1.0 - smoothstep(jumpEnd - 0.2, jumpEnd, jumpProgress));
-        gl_FragColor = vec4(color, opacity);
-    }
+    float opacity = (1.0 - smoothstep(jumpEnd - 0.2, jumpEnd, jumpProgress));
+    gl_FragColor = vec4(color, opacity);
+  }
 `;

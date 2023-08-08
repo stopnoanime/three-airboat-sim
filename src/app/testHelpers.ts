@@ -55,3 +55,14 @@ export function dispatchTouchEvent(
     }),
   );
 }
+
+export function assertVec3(
+  vec3: THREE.Vector3,
+  x: number,
+  y: number,
+  z: number,
+) {
+  expect(vec3.x).toBeCloseTo(x);
+  expect(vec3.y).toBeCloseTo(y);
+  expect(vec3.z).toBeCloseTo(z);
+}
