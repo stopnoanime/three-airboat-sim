@@ -2,8 +2,8 @@
 
 ![screenshot](./screenshot.jpg)
 A small and simple game where you can ride an airboat on a lake.
-It was made as an exercise to learn Three.js and shaders.
-The UI is made in Angular and tested using Jasmine.
+It was made as an exercise to learn [Three.js](https://threejs.org/) and shaders.
+The UI is made in Angular, unit tested using Jasmine and e2e tested using Cypress.
 It also works on mobile using touch controls.
 
 You can access it [here](https://stopnoanime.github.io/three-airboat-sim/).
