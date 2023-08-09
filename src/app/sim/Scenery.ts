@@ -5,15 +5,27 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 export class Scenery extends THREE.Mesh {
   public sandColor = 0xf2d2a9;
   public grassColor = 0x009a17;
-  public heightMapOffset = 0.5;
+
+  /** Height at which sandColor starts to blend into grassColor */
   public grassHeight = 0.6;
+
+  /** Negative Y offset of terrain */
+  public heightMapOffset = 0.5;
+
+  /** Scenery width and height */
+  public size: number;
 
   override material: THREE.ShaderMaterial;
 
-  public size: number;
-
   private body: PLANCK.Body;
 
+  /**
+   * Constructs the scenery, both visual (terrain and meshes) and physical (planck walls)
+   * @param world The Planck world to add scenery walls to
+   * @param mapSvg The SVG containing walls
+   * @param heightMap The height map used to generate terrain
+   * @param size Scenery width and height
+   */
   constructor(
     world: PLANCK.World,
     mapSvg: Document,
@@ -53,6 +65,12 @@ export class Scenery extends THREE.Mesh {
     );
   }
 
+  /**
+   * Uses mesh instancing to place meshes from meshMap at their positions given in `svg`
+   * @param svg The SVG containing mesh positions as circles
+   * @param heightMap The height map, used to position meshes on the Y axis
+   * @param meshMap Maps mesh names to their respective GLTF
+   */
   public placeMeshes(
     svg: Document,
     heightMap: THREE.Texture,
@@ -115,6 +133,14 @@ export class Scenery extends THREE.Mesh {
     }
   }
 
+  /**
+   * Converts paths from an svg to an Planck.Chain array.
+   * The segments parameter is used to set the number of equal length segments,
+   * that every path will be divided to.
+   * @param svg The SVG containing walls as paths
+   * @param segments Number of segments to divide every path to
+   * @returns An Planck.Chain array containing segments vertex positions for every path
+   */
   private convertSvgPathsToMapWalls(svg: Document, segments = 200) {
     return [...svg.getElementsByTagName('path')].map((path) => {
       const points: PLANCK.Vec2[] = [];
@@ -131,6 +157,11 @@ export class Scenery extends THREE.Mesh {
     });
   }
 
+  /**
+   * Uses Canvas to convert texture to imageData
+   * @param texture Three.Texture containing an image
+   * @returns Image data of texture
+   */
   private convertTextureToImageData(texture: THREE.Texture) {
     const canvas = document.createElement('canvas');
     canvas.width = texture.image.width;
@@ -151,30 +182,30 @@ export class Scenery extends THREE.Mesh {
 // Inspired by https://www.youtube.com/watch?app=desktop&v=G0hWjD0n46c
 
 const terrainVertexShader = `
-    uniform sampler2D heightMap;
-    uniform float heightMapOffset;
+  uniform sampler2D heightMap;
+  uniform float heightMapOffset;
 
-    varying float vertexHeight;
+  varying float vertexHeight;
 
-    void main() {
-        vertexHeight = texture2D(heightMap, uv).r;
+  void main() {
+    vertexHeight = texture2D(heightMap, uv).r;
 
-        vec3 newPosition = position + normal * (vertexHeight - heightMapOffset);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-    }
+    vec3 newPosition = position + normal * (vertexHeight - heightMapOffset);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+  }
 `;
 
 const terrainFragmentShader = `
-    uniform vec3 sandColor;
-    uniform vec3 grassColor;
-    uniform float grassHeight;
+  uniform vec3 sandColor;
+  uniform vec3 grassColor;
+  uniform float grassHeight;
 
-    varying float vertexHeight;
+  varying float vertexHeight;
 
-    void main() {
-        vec3 sand = (1.0 - smoothstep(grassHeight, grassHeight + 0.2, vertexHeight)) * sandColor;
-        vec3 grass = smoothstep(grassHeight, grassHeight + 0.2, vertexHeight) * grassColor;
+  void main() {
+    vec3 sand = (1.0 - smoothstep(grassHeight, grassHeight + 0.2, vertexHeight)) * sandColor;
+    vec3 grass = smoothstep(grassHeight, grassHeight + 0.2, vertexHeight) * grassColor;
 
-        gl_FragColor = vec4(sand + grass, 1.0);
-    }
+    gl_FragColor = vec4(sand + grass, 1.0);
+  }
 `;

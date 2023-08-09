@@ -12,17 +12,22 @@ import { Howl } from 'howler';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
+/**
+ * The main game/sim service.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class SimService {
   public loaded = false;
   public playing = false;
+  /** Progress goes from 0 to 1 */
   public loadingProgress = 0;
 
   public airboat: Airboat;
   public inputController: InputController;
 
+  /** The sky's color */
   public backgroundColor = 0xbae6fd;
 
   private water!: Water;
@@ -72,6 +77,10 @@ export class SimService {
       (this.loadingProgress = l / t);
   }
 
+  /**
+   * Setups renderer, loads assets, renders first frame
+   * @param canvas The canvas to render to
+   */
   public async initialize(canvas: HTMLCanvasElement) {
     if (this.loaded) return;
 
@@ -117,6 +126,7 @@ export class SimService {
     this.startGameLoop();
   }
 
+  /** Starts the game and music, `initialize()` must be called first */
   public start() {
     if (!this.loaded || this.playing) return;
 
@@ -126,6 +136,7 @@ export class SimService {
     this.startGameLoop();
   }
 
+  /** Stops the game and music */
   public stop() {
     if (!this.loaded || !this.playing) return;
 
@@ -134,18 +145,21 @@ export class SimService {
     this.stopMusic();
   }
 
+  /** Starts music, can be called only if game is currently playing */
   public startMusic() {
     if (!this.playing) return;
 
-    this.sound.play();
-    this.airboat.sound.play();
+    if (!this.sound.playing()) this.sound.play();
+    if (!this.airboat.sound.playing()) this.airboat.sound.play();
   }
 
+  /** Stops music */
   public stopMusic() {
     this.sound.stop();
     this.airboat.sound.stop();
   }
 
+  /** On resize event handler */
   public onResize() {
     if (!this.loaded) return;
 
@@ -158,6 +172,7 @@ export class SimService {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /** Resets airboat position */
   public reset() {
     this.airboat.reset();
   }
@@ -278,9 +293,9 @@ export class SimService {
         this.water.material.uniforms['waterColorShallow'].value.set(v),
       );
     waterFolder
-      .add(this.water, 'surfaceNoiseCutoff', 0, 0.2)
+      .add(this.water, 'waveNoiseCutoff', 0, 0.2)
       .onChange(
-        (v) => (this.water.material.uniforms['surfaceNoiseCutoff'].value = v),
+        (v) => (this.water.material.uniforms['waveNoiseCutoff'].value = v),
       );
     waterFolder
       .add(this.water, 'edgeFoamCutoffMin', 0, 1)
@@ -293,11 +308,15 @@ export class SimService {
         (v) => (this.water.material.uniforms['edgeFoamCutoffMax'].value = v),
       );
     waterFolder
-      .add(this.water, 'noiseSpeed', 0, 0.2)
-      .onChange((v) => (this.water.material.uniforms['noiseSpeed'].value = v));
+      .add(this.water, 'waveNoiseSpeed', 0, 0.2)
+      .onChange(
+        (v) => (this.water.material.uniforms['waveNoiseSpeed'].value = v),
+      );
     waterFolder
-      .add(this.water, 'noiseSize', 1, 200)
-      .onChange((v) => (this.water.material.uniforms['noiseSize'].value = v));
+      .add(this.water, 'waveNoiseSize', 0.001, 0.1)
+      .onChange(
+        (v) => (this.water.material.uniforms['waveNoiseSize'].value = v),
+      );
 
     this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
 
