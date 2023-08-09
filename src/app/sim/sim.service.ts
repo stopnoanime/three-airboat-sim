@@ -172,9 +172,10 @@ export class SimService {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** Resets airboat position */
+  /** Resets airboat position and throttle */
   public reset() {
     this.airboat.reset();
+    this.inputController.axisValues.throttle = 0;
   }
 
   private startGameLoop() {
